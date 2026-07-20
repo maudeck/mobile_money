@@ -8,9 +8,6 @@ create table if not exists role (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE
 );
-insert into role (name)
-values ('admin'),
-    ('employe');
 -- Création de la table prefixe_operateur
 CREATE TABLE IF NOT EXISTS prefixe_operateur (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,6 +52,7 @@ CREATE TABLE IF NOT EXISTS operation (
     FOREIGN KEY (id_type_operation) REFERENCES type_operation(id)
 );
 -- Insertion des données
+insert into role (name) values ('admin'), ('client');
 INSERT INTO user (telephone, role)
 VALUES ('0340000000', '1'),
     ('0331278201', '2');
