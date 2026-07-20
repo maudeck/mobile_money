@@ -108,31 +108,106 @@
                     </div>
                 <?php endif; ?>
 
+                <div class="card mb-4">
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Gains globaux par type d'opération</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Type d'opération</th>
+                                        <th class="number">Nombre d'opérations</th>
+                                        <th class="number">Total frais (Ar)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($gains as $gain): ?>
+                                        <tr>
+                                            <td><?= esc($gain->libelle) ?></td>
+                                            <td class="number"><?= number_format($gain->nombre_operations, 0, ',', ' ') ?></td>
+                                            <td class="number"><?= number_format($gain->total_frais, 0, ',', ' ') ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                    <?php if (empty($gains)): ?>
+                                        <tr>
+                                            <td colspan="3" class="empty-row text-center">Aucune donnée disponible</td>
+                                        </tr>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Gains par opérateur source (Transferts)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Opérateur</th>
+                                        <th>Préfixe</th>
+                                        <th class="number">Nombre d'opérations</th>
+                                        <th class="number">Total frais (Ar)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($gains_operateurs as $op): ?>
+                                        <tr>
+                                            <td><?= esc($op->operateur_nom) ?></td>
+                                            <td><?= esc($op->code_prefixe) ?></td>
+                                            <td class="number"><?= number_format($op->nombre_operations, 0, ',', ' ') ?></td>
+                                            <td class="number"><?= number_format($op->total_frais, 0, ',', ' ') ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                    <?php if (empty($gains_operateurs)): ?>
+                                        <tr>
+                                            <td colspan="4" class="empty-row text-center">Aucune donnée disponible</td>
+                                        </tr>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card">
-                    <div class="table-wrap">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Type d'operation</th>
-                                    <th class="number">Nombre d'operations</th>
-                                    <th class="number">Total frais (Ar)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($gains as $gain): ?>
+                    <div class="card-header">
+                        <h5 class="mb-0">Montants à envoyer aux opérateurs (Commissions)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
                                     <tr>
-                                        <td><?= esc($gain->libelle) ?></td>
-                                        <td class="number"><?= number_format($gain->nombre_operations, 0, ',', ' ') ?></td>
-                                        <td class="number"><?= number_format($gain->total_frais, 0, ',', ' ') ?></td>
+                                        <th>Opérateur</th>
+                                        <th>Préfixe</th>
+                                        <th class="number">Total commissions (Ar)</th>
                                     </tr>
-                                <?php endforeach; ?>
-                                <?php if (empty($gains)): ?>
-                                    <tr>
-                                        <td colspan="3" class="empty-row text-center">Aucune donnee disponible</td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($commissions_operateurs as $comm): ?>
+                                        <tr>
+                                            <td><?= esc($comm->operateur_nom) ?></td>
+                                            <td><?= esc($comm->code_prefixe) ?></td>
+                                            <td class="number"><?= number_format($comm->total_commission, 0, ',', ' ') ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                    <?php if (empty($commissions_operateurs)): ?>
+                                        <tr>
+                                            <td colspan="3" class="empty-row text-center">Aucune commission à payer</td>
+                                        </tr>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </main>
