@@ -1,25 +1,30 @@
+<?php
+
+/** @var object $type */
+/** @var array $clients */
+$titre = ucfirst($type->libelle) . ' — Mobile Money';
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transfert</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title><?= esc($titre) ?></title>
+    <link href="<?= base_url('css/style.css') ?>" rel="stylesheet">
 </head>
 <body>
-<?php /** @var array $clients */ ?>
 <?= $this->include('client/template/header') ?>
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-body">
-                    <h2 class="card-title mb-4">Transfert</h2>
-                    <form id="transfert-form">
-                        <div class="mb-3">
-                            <label for="beneficiaire" class="form-label">Beneficiaire :</label>
-                            <select class="form-select" id="beneficiaire" name="beneficiaire" required>
+<div class="client-shell">
+    <main class="app-main">
+        <div class="card shadow">
+            <div class="card-body">
+                <h2 class="card-title mb-4"><?= esc($type->libelle) ?></h2>
+                <form id="operation-form" data-frais-url="<?= site_url('client/frais/' . strtolower($type->libelle)) ?>" data-submit-url="<?= site_url('client/' . strtolower($type->libelle)) ?>" data-csrf-name="<?= csrf_token() ?>" data-csrf-hash="<?= csrf_hash() ?>">
+                    <?php if (strtolower($type->libelle) === 'transfert'): ?>
+                        <div class="field">
+                            <label class="field-label" for="beneficiaire">Beneficiaire</label>
+                            <select class="control" id="beneficiaire" name="beneficiaire" required>
                                 <option value="">-- Selectionner un beneficiaire --</option>
                                 <?php foreach ($clients as $client): ?>
                                     <option value="<?= esc($client->telephone) ?>">
@@ -28,110 +33,24 @@
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="mb-3">
-                            <label for="montant" class="form-label">Montant :</label>
-                            <input type="number" class="form-control" id="montant" name="montant" required>
+                    <?php endif; ?>
+                    <div class="field">
+                        <label class="field-label" for="montant">Montant</label>
+                        <div class="control-amount">
+                            <input type="number" class="control" id="montant" name="montant" placeholder="0" required>
+                            <span class="suffix">Ar</span>
                         </div>
-                        <div class="mb-3">
-                            <p class="form-text" id="frais-display">Frais : -</p>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Valider</button>
-                    </form>
-                </div>
+                    </div>
+                    <div class="field">
+                        <div class="fee-display" id="frais-display">Frais : —</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Valider</button>
+                </form>
             </div>
         </div>
-    </div>
+    </main>
 </div>
 
-<?= $this->include('client/template/footer') ?>
-<script>
-let currentFrais = null;
-
-document.getElementById('montant').addEventListener('input', function() {
-    const montant = this.value;
-    const fraisDisplay = document.getElementById('frais-display');
-
-    if (!montant) {
-        fraisDisplay.textContent = 'Frais : -';
-        fraisDisplay.classList.remove('text-danger');
-        currentFrais = null;
-        return;
-    }
-
-    fetch('<?= site_url('client/frais/transfert') ?>', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: 'montant=' + encodeURIComponent(montant) + '&<?= csrf_token() ?>=<?= csrf_hash() ?>'
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) {
-            fraisDisplay.textContent = data.error;
-            fraisDisplay.classList.add('text-danger');
-            currentFrais = null;
-        } else {
-            fraisDisplay.textContent = 'Frais : ' + data.frais + ' Ar';
-            fraisDisplay.classList.remove('text-danger');
-            currentFrais = data.frais;
-        }
-    })
-    .catch(() => {
-        fraisDisplay.textContent = 'Erreur lors du calcul des frais';
-        fraisDisplay.classList.add('text-danger');
-        currentFrais = null;
-    });
-});
-
-document.getElementById('transfert-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-
-    const montant = document.getElementById('montant').value;
-    const beneficiaire = document.getElementById('beneficiaire').value;
-
-    if (!montant || currentFrais === null || !beneficiaire) {
-        alert('Veuillez remplir tous les champs et attendre le calcul des frais.');
-        return;
-    }
-
-    fetch('<?= site_url('client/transfert') ?>', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: 'montant=' + encodeURIComponent(montant) + '&frais_applique=' + encodeURIComponent(currentFrais) + '&beneficiaire=' + encodeURIComponent(beneficiaire) + '&<?= csrf_token() ?>=<?= csrf_hash() ?>'
-    })
-    .then(response => {
-        console.log('Response status:', response.status);
-        return response.text().then(text => {
-            console.log('Raw response:', text);
-            try {
-                return JSON.parse(text);
-            } catch (e) {
-                console.error('JSON parse error:', e);
-                throw new Error('Réponse invalide du serveur');
-            }
-        });
-    })
-    .then(data => {
-        console.log('Parsed data:', data);
-        if (data.success) {
-            alert('Transfert effectué avec succès! Nouveau solde: ' + data.nouveau_solde + ' Ar');
-            document.getElementById('transfert-form').reset();
-            document.getElementById('frais-display').textContent = 'Frais : -';
-            currentFrais = null;
-        } else {
-            alert('Erreur: ' + (data.error || 'Erreur inconnue'));
-        }
-    })
-    .catch(err => {
-        console.error('Fetch error:', err);
-        alert('Erreur lors de l\'enregistrement du transfert: ' + err.message);
-    });
-});
-</script>
+<script src="<?= base_url('js/script.js') ?>"></script>
 </body>
 </html>

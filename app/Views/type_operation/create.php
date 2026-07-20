@@ -1,49 +1,64 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ajouter un Type d'Opération</title>
-    <link href="<?= base_url('assets/bootstrap-5.3.2-dist/css/bootstrap.min.css') ?>" rel="stylesheet">
-    <link href="<?= base_url('assets/css/admin-custom.css') ?>" rel="stylesheet">
+    <title>Ajouter un type d'operation — Mobile Money</title>
+    <link href="<?= base_url('css/style.css') ?>" rel="stylesheet">
 </head>
-<body>
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h4>Ajouter un Type d'Opération</h4>
-                    </div>
-                    <div class="card-body">
-                        <?php if (session()->get('error')): ?>
-                            <div class="alert alert-danger">
-                                <?= session()->get('error') ?>
-                            </div>
-                        <?php endif; ?>
 
-                        <?php if (isset($validation)): ?>
-                            <div class="alert alert-danger">
-                                <?= $validation->listErrors() ?>
-                            </div>
-                        <?php endif; ?>
+<body style="background:var(--bg);min-height:100vh;">
+    <div style="max-width:480px;margin:0 auto;padding:2.5rem 1.5rem;">
+        <a href="<?= site_url('type-operation') ?>" style="display:inline-flex;align-items:center;gap:.4rem;color:var(--navy);font-weight:600;font-size:.88rem;margin-bottom:1.4rem;">
+            <svg class="icon icon-sm" viewBox="0 0 24 24">
+                <path d="M19 12H5" />
+                <path d="M12 19l-7-7 7-7" />
+            </svg>
+            Retour aux types d'operations
+        </a>
 
-                        <form action="<?= site_url('type-operation/store') ?>" method="post">
-                            <?= csrf_field() ?>
-                            <div class="mb-3">
-                                <label for="libelle" class="form-label">Libellé</label>
-                                <input type="text" class="form-control" id="libelle" name="libelle" value="<?= old('libelle') ?>" required>
-                                <div class="form-text">Ex: Depot, Retrait, Transfert</div>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <a href="<?= site_url('type-operation') ?>" class="btn btn-secondary">Retour</a>
-                                <button type="submit" class="btn btn-primary">Ajouter</button>
-                            </div>
-                        </form>
+        <div class="card">
+            <div class="card-header">
+                <h4>Ajouter un type d'operation</h4>
+                <span class="badge badge-amber">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24">
+                        <path d="M20.6 12L12 20.6a2 2 0 01-2.8 0L3.4 14.8a2 2 0 010-2.8L12 3.4H20a1 1 0 011 1v8z" />
+                        <circle cx="16.5" cy="7.5" r="1.2" fill="currentColor" stroke="none" />
+                    </svg>
+                </span>
+            </div>
+            <div class="card-body">
+                <?php if (session()->get('error')): ?>
+                    <div class="alert alert-danger" data-autodismiss><span><?= session()->get('error') ?></span></div>
+                <?php endif; ?>
+                <?php if (isset($validation)): ?>
+                    <div class="alert alert-danger"><span><?= $validation->listErrors() ?></span></div>
+                <?php endif; ?>
+
+                <form action="<?= site_url('type-operation/store') ?>" method="post">
+                    <?= csrf_field() ?>
+                    <div class="field">
+                        <label for="libelle" class="field-label">Libelle</label>
+                        <input type="text" class="control" id="libelle" name="libelle" value="<?= old('libelle') ?>" required>
+                        <span class="field-hint">Ex : Depot, Retrait, Transfert</span>
                     </div>
-                </div>
+                    <div style="display:flex;justify-content:space-between;gap:.8rem;margin-top:1.6rem;">
+                        <a href="<?= site_url('type-operation') ?>" class="btn btn-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-accent">
+                            Ajouter
+                            <svg class="icon icon-sm" viewBox="0 0 24 24">
+                                <line x1="12" y1="5" x2="12" y2="19" />
+                                <line x1="5" y1="12" x2="19" y2="12" />
+                            </svg>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+
+    <script src="<?= base_url('js/script.js') ?>"></script>
 </body>
+
 </html>

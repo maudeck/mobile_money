@@ -12,4 +12,11 @@ class TrancheFraisModel extends Model
     protected $useAutoIncrement = true;
     protected $returnType = 'object';
     protected $useTimestamps = false;
+
+    public function getByTypeOperation(int $idType): array
+    {
+        return $this->where('id_type_operation', $idType)
+            ->orderBy('montant_min', 'ASC')
+            ->findAll();
+    }
 }

@@ -1,31 +1,44 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Client</title>
-    <link href="<?= base_url('assets/bootstrap-5.3.2-dist/css/bootstrap.min.css') ?>" rel="stylesheet">
-    <link href="<?= base_url('assets/css/admin-custom.css') ?>" rel="stylesheet">
-</head>
-<body>
+<?php $titre = 'Accueil — Mobile Money'; ?>
 <?= $this->include('client/template/header') ?>
 
-<div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8 text-center">
-                <div class="card shadow">
-                    <div class="card-body">
-                        <h2 class="card-title mb-4">Bonjour client</h2>
-                        <p class="text-muted">Bienvenue sur votre espace client.</p>
-                        <div class="mt-4">
-                            <span class="badge bg-primary">Rôle : Client</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<h2 style="margin-bottom:.2rem;">Bonjour</h2>
+<p>Bienvenue sur votre espace client.</p>
+<span class="badge badge-navy" style="margin-bottom:1.4rem;display:inline-flex;">
+    <svg class="icon icon-sm" viewBox="0 0 24 24">
+        <path d="M20 6L9 17l-5-5" />
+    </svg>
+    Compte client
+</span>
+
+<div class="section-title" style="margin-top:.2rem;">
+    <h4>Actions rapides</h4>
+</div>
+<div class="quick-actions">
+    <a href="<?= site_url('client/solde') ?>" class="quick-action">
+        <span class="quick-icon"><svg class="icon" viewBox="0 0 24 24">
+                <rect x="2" y="6" width="20" height="13" rx="3" />
+                <path d="M2 10h20" />
+            </svg></span>
+        Mon solde
+    </a>
+    <?php foreach (get_operation_types() as $type): ?>
+        <a href="<?= site_url('client/' . strtolower($type->libelle)) ?>" class="quick-action">
+            <span class="quick-icon"><svg class="icon" viewBox="0 0 24 24">
+                    <path d="M17 1l4 4-4 4" />
+                    <path d="M3 11V9a4 4 0 014-4h14" />
+                    <path d="M7 23l-4-4 4-4" />
+                    <path d="M21 13v2a4 4 0 01-4 4H3" />
+                </svg></span>
+            <?= esc($type->libelle) ?>
+        </a>
+    <?php endforeach; ?>
+    <a href="<?= site_url('client/historique') ?>" class="quick-action">
+        <span class="quick-icon"><svg class="icon" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7v5l3 3" />
+            </svg></span>
+        Historique
+    </a>
+</div>
 
 <?= $this->include('client/template/footer') ?>
-</body>
-</html>

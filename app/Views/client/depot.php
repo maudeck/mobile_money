@@ -1,111 +1,55 @@
+<?php
+
+/** @var object $type */
+$titre = ucfirst($type->libelle) . ' — Mobile Money';
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Depot</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title><?= esc($titre) ?></title>
+    <link href="<?= base_url('css/style.css') ?>" rel="stylesheet">
 </head>
 <body>
 <?= $this->include('client/template/header') ?>
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-body">
-                    <h2 class="card-title mb-4">Depot</h2>
-                    <form id="depot-form">
-                        <div class="mb-3">
-                            <label for="montant" class="form-label">Montant :</label>
-                            <input type="number" class="form-control" id="montant" name="montant" required>
+<div class="client-shell">
+    <main class="app-main">
+        <div class="card shadow">
+            <div class="card-body">
+                <h2 class="card-title mb-4"><?= esc($type->libelle) ?></h2>
+                <form id="operation-form" data-frais-url="<?= site_url('client/frais/' . strtolower($type->libelle)) ?>" data-submit-url="<?= site_url('client/' . strtolower($type->libelle)) ?>" data-csrf-name="<?= csrf_token() ?>" data-csrf-hash="<?= csrf_hash() ?>">
+                    <?php if (strtolower($type->libelle) === 'transfert'): ?>
+                        <div class="field">
+                            <label class="field-label" for="beneficiaire">Beneficiaire</label>
+                            <select class="control" id="beneficiaire" name="beneficiaire" required>
+                                <option value="">-- Selectionner un beneficiaire --</option>
+                                <?php foreach ($clients as $client): ?>
+                                    <option value="<?= esc($client->telephone) ?>">
+                                        <?= esc($client->telephone) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
-                        <div class="mb-3">
-                            <p class="form-text" id="frais-display">Frais : -</p>
+                    <?php endif; ?>
+                    <div class="field">
+                        <label class="field-label" for="montant">Montant</label>
+                        <div class="control-amount">
+                            <input type="number" class="control" id="montant" name="montant" placeholder="0" required>
+                            <span class="suffix">Ar</span>
                         </div>
-                        <button type="submit" class="btn btn-primary">Valider</button>
-                    </form>
-                </div>
+                    </div>
+                    <div class="field">
+                        <div class="fee-display" id="frais-display">Frais : —</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Valider</button>
+                </form>
             </div>
         </div>
-    </div>
+    </main>
 </div>
 
-<?= $this->include('client/template/footer') ?>
-<script>
-let currentFrais = null;
-
-document.getElementById('montant').addEventListener('input', function() {
-    const montant = this.value;
-    const fraisDisplay = document.getElementById('frais-display');
-
-    if (!montant) {
-        fraisDisplay.textContent = 'Frais : -';
-        fraisDisplay.classList.remove('text-danger');
-        currentFrais = null;
-        return;
-    }
-
-    fetch('<?= site_url('client/frais/depot') ?>', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: 'montant=' + encodeURIComponent(montant) + '&<?= csrf_token() ?>=<?= csrf_hash() ?>'
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) {
-            fraisDisplay.textContent = data.error;
-            fraisDisplay.classList.add('text-danger');
-            currentFrais = null;
-        } else {
-            fraisDisplay.textContent = 'Frais : ' + data.frais + ' Ar';
-            fraisDisplay.classList.remove('text-danger');
-            currentFrais = data.frais;
-        }
-    })
-    .catch(() => {
-        fraisDisplay.textContent = 'Erreur lors du calcul des frais';
-        fraisDisplay.classList.add('text-danger');
-        currentFrais = null;
-    });
-});
-
-document.getElementById('depot-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-
-    const montant = document.getElementById('montant').value;
-
-    if (!montant || currentFrais === null) {
-        alert('Veuillez entrer un montant valide et attendre le calcul des frais.');
-        return;
-    }
-
-    fetch('<?= site_url('client/depot') ?>', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: 'montant=' + encodeURIComponent(montant) + '&frais_applique=' + encodeURIComponent(currentFrais) + '&<?= csrf_token() ?>=<?= csrf_hash() ?>'
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Dépôt effectué avec succès! Nouveau solde: ' + data.nouveau_solde + ' Ar');
-            document.getElementById('depot-form').reset();
-            document.getElementById('frais-display').textContent = 'Frais : -';
-            currentFrais = null;
-        } else {
-            alert('Erreur: ' + data.error);
-        }
-    })
-    .catch(() => {
-        alert('Erreur lors de l\'enregistrement du dépôt.');
-    });
-});
-</script>
+<script src="<?= base_url('js/script.js') ?>"></script>
 </body>
 </html>
