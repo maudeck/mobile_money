@@ -1,111 +1,46 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retrait</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
+<?php $titre = 'Retrait — Mobile Money'; ?>
 <?= $this->include('client/template/header') ?>
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-body">
-                    <h2 class="card-title mb-4">Retrait</h2>
-                    <form id="retrait-form">
-                        <div class="mb-3">
-                            <label for="montant" class="form-label">Montant :</label>
-                            <input type="number" class="form-control" id="montant" name="montant" required>
-                        </div>
-                        <div class="mb-3">
-                            <p class="form-text" id="frais-display">Frais : -</p>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Valider</button>
-                    </form>
+<div class="section-title" style="margin-top:0;">
+    <h4>Retrait</h4>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form id="retrait-form"
+            data-frais-url="<?= site_url('client/frais/retrait') ?>"
+            data-submit-url="<?= site_url('client/retrait') ?>"
+            data-csrf-name="<?= csrf_token() ?>"
+            data-csrf-hash="<?= csrf_hash() ?>">
+
+            <div class="field">
+                <label for="montant" class="field-label">Montant a retirer</label>
+                <div class="control-amount">
+                    <input type="number" class="control" id="montant" name="montant" placeholder="0" required>
+                    <span class="suffix">Ar</span>
                 </div>
             </div>
-        </div>
+
+            <div class="field">
+                <div class="fee-display" id="frais-display">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="9" />
+                        <line x1="12" y1="8" x2="12" y2="13" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    Frais : —
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-accent btn-block">
+                Valider le retrait
+                <svg class="icon icon-sm" viewBox="0 0 24 24">
+                    <path d="M12 19V5" />
+                    <path d="M6 11l6-6 6 6" />
+                </svg>
+            </button>
+        </form>
     </div>
 </div>
 
 <?= $this->include('client/template/footer') ?>
-<script>
-let currentFrais = null;
-
-document.getElementById('montant').addEventListener('input', function() {
-    const montant = this.value;
-    const fraisDisplay = document.getElementById('frais-display');
-
-    if (!montant) {
-        fraisDisplay.textContent = 'Frais : -';
-        fraisDisplay.classList.remove('text-danger');
-        currentFrais = null;
-        return;
-    }
-
-    fetch('<?= site_url('client/frais/retrait') ?>', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: 'montant=' + encodeURIComponent(montant) + '&<?= csrf_token() ?>=<?= csrf_hash() ?>'
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) {
-            fraisDisplay.textContent = data.error;
-            fraisDisplay.classList.add('text-danger');
-            currentFrais = null;
-        } else {
-            fraisDisplay.textContent = 'Frais : ' + data.frais + ' Ar';
-            fraisDisplay.classList.remove('text-danger');
-            currentFrais = data.frais;
-        }
-    })
-    .catch(() => {
-        fraisDisplay.textContent = 'Erreur lors du calcul des frais';
-        fraisDisplay.classList.add('text-danger');
-        currentFrais = null;
-    });
-});
-
-document.getElementById('retrait-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-
-    const montant = document.getElementById('montant').value;
-
-    if (!montant || currentFrais === null) {
-        alert('Veuillez entrer un montant valide et attendre le calcul des frais.');
-        return;
-    }
-
-    fetch('<?= site_url('client/retrait') ?>', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: 'montant=' + encodeURIComponent(montant) + '&frais_applique=' + encodeURIComponent(currentFrais) + '&<?= csrf_token() ?>=<?= csrf_hash() ?>'
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Retrait effectué avec succès! Nouveau solde: ' + data.nouveau_solde + ' Ar');
-            document.getElementById('retrait-form').reset();
-            document.getElementById('frais-display').textContent = 'Frais : -';
-            currentFrais = null;
-        } else {
-            alert('Erreur: ' + data.error);
-        }
-    })
-    .catch(() => {
-        alert('Erreur lors de l\'enregistrement du retrait.');
-    });
-});
-</script>
-</body>
-</html>

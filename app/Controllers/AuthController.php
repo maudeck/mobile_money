@@ -42,17 +42,30 @@ class AuthController extends BaseController
 
         if (!$user) {
             $prefixe = substr($telephone, 0, 3);
+
+            if ($prefixe !== '034') {
+                return redirect()->to('/login')->with('error', 'Accès refusé : seul l\'opérateur Telma (034) est autorisé.');
+            }
+
             $operateurModel = new OperateurModel();
             $prefixeInfo = $operateurModel->where('code_prefixe', $prefixe)->first();
 
             if (!$prefixeInfo) {
-                return redirect()->to('/login')->with('error', 'Numéro de téléphone invalide : préfixe inconnu.');
+                return redirect()->to('/login')->with('error', 'Numéro de téléphone invalide : opérateur non reconnu.');
             }
 
             $this->userModel->createClient($telephone);
             $user = $this->userModel->findByTelephone($telephone);
 
             $this->clientModel->createForUser($user->id, $prefixeInfo->id);
+        } else {
+            $client = $this->clientModel->findByUserId($user->id);
+            if ($client) {
+                $prefixeInfo = db_connect()->table('prefixe_operateur')->where('id', $client->id_prefixe)->get()->getFirstRow();
+                if (!$prefixeInfo || $prefixeInfo->code_prefixe !== '034') {
+                    return redirect()->to('/login')->with('error', 'Accès refusé : seul l\'opérateur Telma (034) est autorisé.');
+                }
+            }
         }
 
         $this->session->set([

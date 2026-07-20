@@ -19,6 +19,7 @@ $routes->post('/client/frais/(:segment)', 'ClientController::calculFrais/$1');
 $routes->post('/client/depot', 'ClientController::depot');
 $routes->post('/client/retrait', 'ClientController::retrait');
 $routes->post('/client/transfert', 'ClientController::transfert');
+$routes->post('/client/transfert-multiple', 'ClientController::transfertMultiple');
 $routes->get('/client/(:segment)', 'ClientController::operation/$1');
 
 $routes->get('/operateur', 'OperateurController::index');
@@ -44,5 +45,10 @@ $routes->post('/type-operation/delete-tranche/(:num)/(:num)', 'TypeOperationCont
 
 $routes->get('/admin/gains', 'StatistiqueController::gains');
 $routes->get('/admin/clients', 'StatistiqueController::clients');
+
+$routes->get('/commission', 'CommissionController::index');
+$routes->get('/commission/create', 'CommissionController::create');
+$routes->post('/commission/create', 'CommissionController::create');
+$routes->get('/commission/delete/(:num)', 'CommissionController::delete/$1');
 
 $routes->get('/test-db', 'TestController::index');
