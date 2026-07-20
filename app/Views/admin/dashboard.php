@@ -26,6 +26,12 @@
                         <div class="mt-4">
                             <span class="badge bg-success">Rôle : Admin</span>
                         </div>
+                        <div class="mt-3">
+                            <a href="<?= site_url('operateur') ?>" class="btn btn-primary">Gérer les opérateurs</a>
+                            <a href="<?= site_url('type-operation') ?>" class="btn btn-success ms-2">Types d'opérations</a>
+                            <a href="<?= site_url('admin/gains') ?>" class="btn btn-info ms-2">Gains par frais</a>
+                            <a href="<?= site_url('admin/clients') ?>" class="btn btn-warning ms-2">Comptes clients</a>
+                        </div>
                     </div>
                 </div>
             </div>
