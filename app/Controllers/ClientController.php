@@ -117,29 +117,77 @@ class ClientController extends BaseController
             return $this->response->setJSON(['error' => 'Type d\'opération introuvable']);
         }
 
-        $trancheModel = new TrancheFraisModel();
-        $tranche = $trancheModel->where('id_type_operation', $type->id)
-            ->where('montant_min <=', $montant)
-            ->where('montant_max >=', $montant)
-            ->first();
+        $frais = 0;
+        $commission_pct = 0;
 
-        if (!$tranche) {
-            $minTranche = $trancheModel->where('id_type_operation', $type->id)
-                ->orderBy('montant_min', 'ASC')
+        if (strtolower($type->libelle) === 'transfert') {
+            $beneficiaireTel = $this->request->getPost('beneficiaire');
+            if (!$beneficiaireTel) {
+                return $this->response->setJSON(['error' => 'Bénéficiaire requis']);
+            }
+
+            $beneficiaireUser = db_connect()->table('user')->where('telephone', $beneficiaireTel)->get()->getFirstRow();
+            if (!$beneficiaireUser) {
+                return $this->response->setJSON(['error' => 'Bénéficiaire introuvable']);
+            }
+
+            $clientModel = new ClientModel();
+            $emetteur = $clientModel->findByUserId($this->session->get('user_id'));
+            $beneficiaireClient = $clientModel->findByUserId($beneficiaireUser->id);
+
+            if (!$emetteur || !$beneficiaireClient) {
+                return $this->response->setJSON(['error' => 'Client introuvable']);
+            }
+
+            $commissionModel = new CommissionOperateurModel();
+            $commissionInfo = $commissionModel->findByOperateurs($emetteur->id_prefixe, $beneficiaireClient->id_prefixe);
+
+            if (!$commissionInfo) {
+                return $this->response->setJSON(['error' => 'Aucune commission configurée pour cette paire d\'opérateurs']);
+            }
+
+            $commission_pct = (float) $commissionInfo->commission_pct;
+
+            $trancheModel = new TrancheFraisModel();
+            $tranche = $trancheModel->where('id_type_operation', $type->id)
+                ->where('montant_min <=', $montant)
+                ->where('montant_max >=', $montant)
                 ->first();
 
-            if (!$minTranche) {
-                return $this->response->setJSON(['frais' => 0]);
+            if ($tranche) {
+                $frais = (float) $tranche->frais;
+            }
+        } else {
+            $trancheModel = new TrancheFraisModel();
+            $tranche = $trancheModel->where('id_type_operation', $type->id)
+                ->where('montant_min <=', $montant)
+                ->where('montant_max >=', $montant)
+                ->first();
+
+            if (!$tranche) {
+                $minTranche = $trancheModel->where('id_type_operation', $type->id)
+                    ->orderBy('montant_min', 'ASC')
+                    ->first();
+
+                if (!$minTranche) {
+                    return $this->response->setJSON(['frais' => 0, 'commission_pct' => 0]);
+                }
+
+                if ((float) $montant < (float) $minTranche->montant_min) {
+                    return $this->response->setJSON(['error' => 'Montant trop petit']);
+                }
+
+                return $this->response->setJSON(['error' => 'Montant trop grand']);
             }
 
-            if ((float) $montant < (float) $minTranche->montant_min) {
-                return $this->response->setJSON(['error' => 'Montant trop petit']);
-            }
-
-            return $this->response->setJSON(['error' => 'Montant trop grand']);
+            $frais = $tranche->frais;
+            $commission_pct = (float) $tranche->commission_pct;
         }
 
-        return $this->response->setJSON(['frais' => $tranche->frais]);
+        return $this->response->setJSON([
+            'frais' => $frais,
+            'commission_pct' => $commission_pct
+        ]);
     }
 
     public function depot()
@@ -259,10 +307,9 @@ class ClientController extends BaseController
         }
 
         $montant = $this->request->getPost('montant');
-        $fraisApp = $this->request->getPost('frais_applique');
         $beneficiaireTel = $this->request->getPost('beneficiaire');
 
-        if (!$montant || !is_numeric($montant) || $fraisApp === null || !is_numeric($fraisApp) || empty($beneficiaireTel)) {
+        if (!$montant || !is_numeric($montant) || empty($beneficiaireTel)) {
             return $this->response->setJSON(['error' => 'Données invalides'])->setStatusCode(400);
         }
 
@@ -285,17 +332,25 @@ class ClientController extends BaseController
             return $this->response->setJSON(['error' => 'Beneficiaire introuvable'])->setStatusCode(404);
         }
 
-        $totalDebit = (float) $montant + (float) $fraisApp;
-
-        if ($emetteur->solde < $totalDebit) {
-            return $this->response->setJSON(['error' => 'Solde insuffisant'])->setStatusCode(400);
-        }
-
         $typeModel = new TypeOperationModel();
         $type = $typeModel->where('LOWER(libelle)', 'transfert')->first();
 
         if (!$type) {
             return $this->response->setJSON(['error' => 'Type d\'opération introuvable'])->setStatusCode(404);
+        }
+
+        $commissionModel = new CommissionOperateurModel();
+        $commissionInfo = $commissionModel->findByOperateurs($emetteur->id_prefixe, $beneficiaireClient->id_prefixe);
+
+        $commission = 0;
+        if ($commissionInfo && (float) $commissionInfo->commission_pct > 0) {
+            $commission = (float) $montant * ((float) $commissionInfo->commission_pct / 100);
+        }
+
+        $totalDebit = (float) $montant + $commission;
+
+        if ($emetteur->solde < $totalDebit) {
+            return $this->response->setJSON(['error' => 'Solde insuffisant'])->setStatusCode(400);
         }
 
         try {
@@ -312,7 +367,7 @@ class ClientController extends BaseController
             db_connect()->table('operation')->insert([
                 'date_operation'     => date('Y-m-d H:i:s'),
                 'montant'            => (float) $montant,
-                'frais_applique'     => (float) $fraisApp,
+                'frais_applique'     => $commission,
                 'id_client_emetteur' => $emetteur->id,
                 'id_client_destinataire' => $beneficiaireClient->id,
                 'id_type_operation'  => $type->id,

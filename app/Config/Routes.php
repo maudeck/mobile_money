@@ -46,4 +46,9 @@ $routes->post('/type-operation/delete-tranche/(:num)/(:num)', 'TypeOperationCont
 $routes->get('/admin/gains', 'StatistiqueController::gains');
 $routes->get('/admin/clients', 'StatistiqueController::clients');
 
+$routes->get('/commission', 'CommissionController::index');
+$routes->get('/commission/create', 'CommissionController::create');
+$routes->post('/commission/create', 'CommissionController::create');
+$routes->get('/commission/delete/(:num)', 'CommissionController::delete/$1');
+
 $routes->get('/test-db', 'TestController::index');

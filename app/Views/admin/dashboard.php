@@ -103,16 +103,26 @@
                         <p>Configurer les prefixes et les operateurs de telephonie.</p>
                     </a>
 
-                    <a href="<?= site_url('type-operation') ?>" class="stat-card accent">
-                        <div class="stat-icon"><svg class="icon" viewBox="0 0 24 24">
-                                <path d="M20.6 12L12 20.6a2 2 0 01-2.8 0L3.4 14.8a2 2 0 010-2.8L12 3.4H20a1 1 0 011 1v8z" />
-                                <circle cx="16.5" cy="7.5" r="1.2" fill="currentColor" stroke="none" />
-                            </svg></div>
-                        <h3>Types d'operations</h3>
-                        <p>Gerer les types d'operations et les tranches de frais.</p>
-                    </a>
+                     <a href="<?= site_url('type-operation') ?>" class="stat-card accent">
+                         <div class="stat-icon"><svg class="icon" viewBox="0 0 24 24">
+                                 <path d="M20.6 12L12 20.6a2 2 0 01-2.8 0L3.4 14.8a2 2 0 010-2.8L12 3.4H20a1 1 0 011 1v8z" />
+                                 <circle cx="16.5" cy="7.5" r="1.2" fill="currentColor" stroke="none" />
+                             </svg></div>
+                         <h3>Types d'operations</h3>
+                         <p>Gerer les types d'operations et les tranches de frais.</p>
+                     </a>
 
-                    <a href="<?= site_url('admin/gains') ?>" class="stat-card">
+                     <a href="<?= site_url('commission') ?>" class="stat-card accent">
+                         <div class="stat-icon"><svg class="icon" viewBox="0 0 24 24">
+                                 <line x1="18" y1="20" x2="18" y2="10" />
+                                 <line x1="12" y1="20" x2="12" y2="4" />
+                                 <line x1="6" y1="20" x2="6" y2="14" />
+                             </svg></div>
+                         <h3>Commissions</h3>
+                         <p>Configurer les commissions par operateur pour les transferts.</p>
+                     </a>
+
+                     <a href="<?= site_url('admin/gains') ?>" class="stat-card">
                         <div class="stat-icon"><svg class="icon" viewBox="0 0 24 24">
                                 <line x1="18" y1="20" x2="18" y2="10" />
                                 <line x1="12" y1="20" x2="12" y2="4" />

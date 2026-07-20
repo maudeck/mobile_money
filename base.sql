@@ -108,3 +108,18 @@ JOIN client c_em ON o.id_client_emetteur = c_em.id
 JOIN user u_em ON c_em.id_user = u_em.id
 LEFT JOIN client c_dest ON o.id_client_destinataire = c_dest.id
 LEFT JOIN user u_dest ON c_dest.id_user = u_dest.id;
+
+CREATE TABLE IF NOT EXISTS commission_operateur (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_prefixe_source INTEGER NOT NULL,
+    id_prefixe_dest INTEGER NOT NULL,
+    commission_pct REAL NOT NULL DEFAULT 0,
+    FOREIGN KEY (id_prefixe_source) REFERENCES prefixe_operateur(id),
+    FOREIGN KEY (id_prefixe_dest) REFERENCES prefixe_operateur(id)
+);
+
+INSERT INTO commission_operateur (id_prefixe_source, id_prefixe_dest, commission_pct)
+VALUES
+    (3, 1, 2),
+    (3, 2, 2),
+    (3, 4, 2);

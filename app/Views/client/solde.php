@@ -20,6 +20,8 @@ $titre = 'Mon solde — Mobile Money';
     </div>
 </div>
 
+<?= $this->include('client/template/footer')?>
+
 <div class="quick-actions">
     <?php foreach (get_operation_types() as $type): ?>
         <a href="<?= site_url('client/' . strtolower($type->libelle)) ?>" class="quick-action">
@@ -42,3 +44,4 @@ $titre = 'Mon solde — Mobile Money';
 </div>
 
 <?= $this->include('client/template/footer') ?>
+
