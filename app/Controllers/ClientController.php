@@ -207,7 +207,7 @@ class ClientController extends BaseController
             }
 
             $frais = $tranche->frais;
-            $commission_pct = (float) $tranche->commission_pct;
+            $commission_pct = 0;
         }
 
         return $this->response->setJSON([
