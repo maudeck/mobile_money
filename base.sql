@@ -9,7 +9,7 @@ create table if not exists role (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE
 );
-insert into role (name) values ('admin'), ('employe');
+insert into role (name) values ('admin'), ('client');
 
 -- Insertion des données
 INSERT INTO user (telephone, role)
