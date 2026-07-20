@@ -1,55 +1,46 @@
-<?php
-
-/** @var object $type */
-$titre = ucfirst($type->libelle) . ' — Mobile Money';
-?>
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= esc($titre) ?></title>
-    <link href="<?= base_url('css/style.css') ?>" rel="stylesheet">
-</head>
-<body>
+<?php $titre = 'Retrait — Mobile Money'; ?>
 <?= $this->include('client/template/header') ?>
 
-<div class="client-shell">
-    <main class="app-main">
-        <div class="card shadow">
-            <div class="card-body">
-                <h2 class="card-title mb-4"><?= esc($type->libelle) ?></h2>
-                <form id="operation-form" data-frais-url="<?= site_url('client/frais/' . strtolower($type->libelle)) ?>" data-submit-url="<?= site_url('client/' . strtolower($type->libelle)) ?>" data-csrf-name="<?= csrf_token() ?>" data-csrf-hash="<?= csrf_hash() ?>">
-                    <?php if (strtolower($type->libelle) === 'transfert'): ?>
-                        <div class="field">
-                            <label class="field-label" for="beneficiaire">Beneficiaire</label>
-                            <select class="control" id="beneficiaire" name="beneficiaire" required>
-                                <option value="">-- Selectionner un beneficiaire --</option>
-                                <?php foreach ($clients as $client): ?>
-                                    <option value="<?= esc($client->telephone) ?>">
-                                        <?= esc($client->telephone) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                    <?php endif; ?>
-                    <div class="field">
-                        <label class="field-label" for="montant">Montant</label>
-                        <div class="control-amount">
-                            <input type="number" class="control" id="montant" name="montant" placeholder="0" required>
-                            <span class="suffix">Ar</span>
-                        </div>
-                    </div>
-                    <div class="field">
-                        <div class="fee-display" id="frais-display">Frais : —</div>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block">Valider</button>
-                </form>
-            </div>
-        </div>
-    </main>
+<div class="section-title" style="margin-top:0;">
+    <h4>Retrait</h4>
 </div>
 
-<script src="<?= base_url('js/script.js') ?>"></script>
-</body>
-</html>
+<div class="card">
+    <div class="card-body">
+        <form id="retrait-form"
+            data-frais-url="<?= site_url('client/frais/retrait') ?>"
+            data-submit-url="<?= site_url('client/retrait') ?>"
+            data-csrf-name="<?= csrf_token() ?>"
+            data-csrf-hash="<?= csrf_hash() ?>">
+
+            <div class="field">
+                <label for="montant" class="field-label">Montant a retirer</label>
+                <div class="control-amount">
+                    <input type="number" class="control" id="montant" name="montant" placeholder="0" required>
+                    <span class="suffix">Ar</span>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="fee-display" id="frais-display">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="9" />
+                        <line x1="12" y1="8" x2="12" y2="13" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    Frais : —
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-accent btn-block">
+                Valider le retrait
+                <svg class="icon icon-sm" viewBox="0 0 24 24">
+                    <path d="M12 19V5" />
+                    <path d="M6 11l6-6 6 6" />
+                </svg>
+            </button>
+        </form>
+    </div>
+</div>
+
+<?= $this->include('client/template/footer') ?>

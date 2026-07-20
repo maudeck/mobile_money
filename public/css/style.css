@@ -272,6 +272,30 @@ table.table th.number{text-align:right;}
 
 .app-main{flex:1;padding:1.3rem 1.1rem calc(var(--bottom-nav-h) + 1.6rem);}
 
+@media (min-width:768px){
+  .client-shell{
+    max-width:1000px;
+    margin:0 auto;
+    min-height:100vh;
+  }
+  .app-main{
+    flex:1;
+    padding:2rem 2rem;
+  }
+  .quick-actions{
+    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  }
+  .wallet-card{
+    padding:2.5rem 2rem;
+  }
+  .wallet-card-amount{
+    font-size:3rem;
+  }
+  .bottom-nav{
+    display:none;
+  }
+}
+
 /* Signature element: wallet card */
 .wallet-card{
   border-radius:var(--radius-lg);padding:1.6rem 1.5rem;color:#fff;position:relative;overflow:hidden;
@@ -320,6 +344,26 @@ table.table th.number{text-align:right;}
 .bottom-nav-item.active{color:var(--navy);}
 .bottom-nav-item.active .icon{color:var(--amber);transform:translateY(-2px);}
 .bottom-nav-item.logout{color:var(--danger);}
+
+@media (min-width:768px){
+  .client-shell{
+    max-width:100%;
+    margin:0;
+  }
+  .app-main{
+    flex:1;
+    padding:2rem 2rem calc(var(--bottom-nav-h) + 2rem);
+  }
+  .quick-actions{
+    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  }
+  .wallet-card{
+    padding:2.5rem 2rem;
+  }
+  .wallet-card-amount{
+    font-size:3rem;
+  }
+}
 
 /* History table on mobile -> stacked cards */
 .op-row{display:flex;align-items:center;gap:.9rem;padding:1rem 1.1rem;border-bottom:1px solid var(--border);}
