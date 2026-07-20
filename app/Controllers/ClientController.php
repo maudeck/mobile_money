@@ -132,9 +132,6 @@ class ClientController extends BaseController
             $beneficiaireUser = db_connect()->table('user')->where('telephone', $beneficiaireTel)->get()->getFirstRow();
             if (!$beneficiaireUser) {
                 $prefixe = substr($beneficiaireTel, 0, 3);
-                if ($prefixe !== '034') {
-                    return $this->response->setJSON(['error' => 'Accès refusé : seul l\'opérateur Telma (034) est autorisé pour le bénéficiaire.']);
-                }
 
                 $operateurModel = new OperateurModel();
                 $prefixeInfo = $operateurModel->where('code_prefixe', $prefixe)->first();
@@ -160,6 +157,8 @@ class ClientController extends BaseController
                     $beneficiaireClient = $clientModel->findByUserId($beneficiaireUser->id);
                 }
             }
+
+            $emetteur = $clientModel->findByUserId($this->session->get('user_id'));
 
             if (!$emetteur || !$beneficiaireClient) {
                 return $this->response->setJSON(['error' => 'Client introuvable']);
@@ -351,9 +350,6 @@ class ClientController extends BaseController
         $beneficiaireUser = db_connect()->table('user')->where('telephone', $beneficiaireTel)->get()->getFirstRow();
         if (!$beneficiaireUser) {
             $prefixe = substr($beneficiaireTel, 0, 3);
-            if ($prefixe !== '034') {
-                return $this->response->setJSON(['error' => 'Accès refusé : seul l\'opérateur Telma (034) est autorisé pour le bénéficiaire.'])->setStatusCode(400);
-            }
 
             $operateurModel = new OperateurModel();
             $prefixeInfo = $operateurModel->where('code_prefixe', $prefixe)->first();
