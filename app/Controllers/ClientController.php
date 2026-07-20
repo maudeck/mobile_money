@@ -4,8 +4,10 @@ namespace App\Controllers;
 
 use App\Models\ClientModel;
 use App\Models\CommissionOperateurModel;
+use App\Models\OperateurModel;
 use App\Models\TypeOperationModel;
 use App\Models\TrancheFraisModel;
+use App\Models\UserModel;
 use App\Models\VueHistoriqueModel;
 use CodeIgniter\Controller;
 
@@ -129,12 +131,35 @@ class ClientController extends BaseController
 
             $beneficiaireUser = db_connect()->table('user')->where('telephone', $beneficiaireTel)->get()->getFirstRow();
             if (!$beneficiaireUser) {
-                return $this->response->setJSON(['error' => 'Bénéficiaire introuvable']);
+                $prefixe = substr($beneficiaireTel, 0, 3);
+                if ($prefixe !== '034') {
+                    return $this->response->setJSON(['error' => 'Accès refusé : seul l\'opérateur Telma (034) est autorisé pour le bénéficiaire.']);
+                }
+
+                $operateurModel = new OperateurModel();
+                $prefixeInfo = $operateurModel->where('code_prefixe', $prefixe)->first();
+
+                if (!$prefixeInfo) {
+                    return $this->response->setJSON(['error' => 'Numéro de téléphone invalide : opérateur non reconnu.']);
+                }
+
+                $userModel = new UserModel();
+                $userModel->createClient($beneficiaireTel);
+                $beneficiaireUser = db_connect()->table('user')->where('telephone', $beneficiaireTel)->get()->getFirstRow();
             }
 
             $clientModel = new ClientModel();
-            $emetteur = $clientModel->findByUserId($this->session->get('user_id'));
             $beneficiaireClient = $clientModel->findByUserId($beneficiaireUser->id);
+
+            if (!$beneficiaireClient) {
+                $prefixe = substr($beneficiaireTel, 0, 3);
+                $operateurModel = new OperateurModel();
+                $prefixeInfo = $operateurModel->where('code_prefixe', $prefixe)->first();
+                if ($prefixeInfo) {
+                    $clientModel->createForUser($beneficiaireUser->id, $prefixeInfo->id);
+                    $beneficiaireClient = $clientModel->findByUserId($beneficiaireUser->id);
+                }
+            }
 
             if (!$emetteur || !$beneficiaireClient) {
                 return $this->response->setJSON(['error' => 'Client introuvable']);
@@ -325,10 +350,34 @@ class ClientController extends BaseController
 
         $beneficiaireUser = db_connect()->table('user')->where('telephone', $beneficiaireTel)->get()->getFirstRow();
         if (!$beneficiaireUser) {
-            return $this->response->setJSON(['error' => 'Beneficiaire introuvable'])->setStatusCode(404);
+            $prefixe = substr($beneficiaireTel, 0, 3);
+            if ($prefixe !== '034') {
+                return $this->response->setJSON(['error' => 'Accès refusé : seul l\'opérateur Telma (034) est autorisé pour le bénéficiaire.'])->setStatusCode(400);
+            }
+
+            $operateurModel = new OperateurModel();
+            $prefixeInfo = $operateurModel->where('code_prefixe', $prefixe)->first();
+
+            if (!$prefixeInfo) {
+                return $this->response->setJSON(['error' => 'Numéro de téléphone invalide : opérateur non reconnu.'])->setStatusCode(400);
+            }
+
+            $userModel = new UserModel();
+            $userModel->createClient($beneficiaireTel);
+            $beneficiaireUser = db_connect()->table('user')->where('telephone', $beneficiaireTel)->get()->getFirstRow();
         }
 
         $beneficiaireClient = $clientModel->findByUserId($beneficiaireUser->id);
+        if (!$beneficiaireClient) {
+            $prefixe = substr($beneficiaireTel, 0, 3);
+            $operateurModel = new OperateurModel();
+            $prefixeInfo = $operateurModel->where('code_prefixe', $prefixe)->first();
+            if ($prefixeInfo) {
+                $clientModel->createForUser($beneficiaireUser->id, $prefixeInfo->id);
+                $beneficiaireClient = $clientModel->findByUserId($beneficiaireUser->id);
+            }
+        }
+
         if (!$beneficiaireClient) {
             return $this->response->setJSON(['error' => 'Beneficiaire introuvable'])->setStatusCode(404);
         }
@@ -443,11 +492,34 @@ class ClientController extends BaseController
             foreach ($beneficiaires as $tel) {
                 $beneficiaireUser = db_connect()->table('user')->where('telephone', $tel)->get()->getFirstRow();
                 if (!$beneficiaireUser) {
+                    $prefixe = substr($tel, 0, 3);
+                    if ($prefixe === '034') {
+                        $operateurModel = new OperateurModel();
+                        $prefixeInfo = $operateurModel->where('code_prefixe', $prefixe)->first();
+                        if ($prefixeInfo) {
+                            $userModel = new UserModel();
+                            $userModel->createClient($tel);
+                            $beneficiaireUser = db_connect()->table('user')->where('telephone', $tel)->get()->getFirstRow();
+                        }
+                    }
+                }
+
+                if (!$beneficiaireUser) {
                     db_connect()->transRollback();
                     return $this->response->setJSON(['error' => 'Beneficiaire introuvable : ' . $tel])->setStatusCode(404);
                 }
 
                 $beneficiaireClient = $clientModel->findByUserId($beneficiaireUser->id);
+                if (!$beneficiaireClient) {
+                    $prefixe = substr($tel, 0, 3);
+                    $operateurModel = new OperateurModel();
+                    $prefixeInfo = $operateurModel->where('code_prefixe', $prefixe)->first();
+                    if ($prefixeInfo) {
+                        $clientModel->createForUser($beneficiaireUser->id, $prefixeInfo->id);
+                        $beneficiaireClient = $clientModel->findByUserId($beneficiaireUser->id);
+                    }
+                }
+
                 if (!$beneficiaireClient) {
                     db_connect()->transRollback();
                     return $this->response->setJSON(['error' => 'Beneficiaire introuvable : ' . $tel])->setStatusCode(404);
