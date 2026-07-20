@@ -140,13 +140,23 @@ class ClientController extends BaseController
             }
 
             $commissionModel = new CommissionOperateurModel();
-            $tranche = $commissionModel->findTranche($emetteur->id_prefixe, $beneficiaireClient->id_prefixe, $montant);
+            $commissionInfo = $commissionModel->findByOperateurs($emetteur->id_prefixe, $beneficiaireClient->id_prefixe);
 
-            if (!$tranche) {
-                return $this->response->setJSON(['error' => 'Aucune commission configurée pour cette paire d\'opérateurs et ce montant']);
+            if (!$commissionInfo) {
+                return $this->response->setJSON(['error' => 'Aucune commission configurée pour cette paire d\'opérateurs']);
             }
 
-            $commission_pct = (float) $tranche->commission_pct;
+            $commission_pct = (float) $commissionInfo->commission_pct;
+
+            $trancheModel = new TrancheFraisModel();
+            $tranche = $trancheModel->where('id_type_operation', $type->id)
+                ->where('montant_min <=', $montant)
+                ->where('montant_max >=', $montant)
+                ->first();
+
+            if ($tranche) {
+                $frais = (float) $tranche->frais;
+            }
         } else {
             $trancheModel = new TrancheFraisModel();
             $tranche = $trancheModel->where('id_type_operation', $type->id)
@@ -329,11 +339,11 @@ class ClientController extends BaseController
         }
 
         $commissionModel = new CommissionOperateurModel();
-        $tranche = $commissionModel->findTranche($emetteur->id_prefixe, $beneficiaireClient->id_prefixe, $montant);
+        $commissionInfo = $commissionModel->findByOperateurs($emetteur->id_prefixe, $beneficiaireClient->id_prefixe);
 
         $commission = 0;
-        if ($tranche && (float) $tranche->commission_pct > 0) {
-            $commission = (float) $montant * ((float) $tranche->commission_pct / 100);
+        if ($commissionInfo && (float) $commissionInfo->commission_pct > 0) {
+            $commission = (float) $montant * ((float) $commissionInfo->commission_pct / 100);
         }
 
         $totalDebit = (float) $montant + $commission;

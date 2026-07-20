@@ -83,8 +83,6 @@ class CommissionController extends BaseController
         if ($this->request->getMethod() === 'POST') {
             $rules = [
                 'id_prefixe_dest' => 'required|numeric|greater_than[0]',
-                'montant_min' => 'required|numeric|greater_than[0]',
-                'montant_max' => 'required|numeric|greater_than[0]',
                 'commission_pct' => 'required|numeric|greater_than_equal_to[0]|less_than_equal_to[100]'
             ];
 
@@ -99,8 +97,6 @@ class CommissionController extends BaseController
             $this->commissionModel->save([
                 'id_prefixe_source' => $source->id,
                 'id_prefixe_dest' => $this->request->getPost('id_prefixe_dest'),
-                'montant_min' => $this->request->getPost('montant_min'),
-                'montant_max' => $this->request->getPost('montant_max'),
                 'commission_pct' => $this->request->getPost('commission_pct')
             ]);
 

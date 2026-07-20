@@ -47,14 +47,6 @@
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label for="montant_min" class="form-label">Montant Minimum (Ar)</label>
-                                <input type="number" class="form-control" id="montant_min" name="montant_min" value="<?= old('montant_min') ?>" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="montant_max" class="form-label">Montant Maximum (Ar)</label>
-                                <input type="number" class="form-control" id="montant_max" name="montant_max" value="<?= old('montant_max') ?>" required>
-                            </div>
-                            <div class="mb-3">
                                 <label for="commission_pct" class="form-label">Commission (%)</label>
                                 <input type="number" class="form-control" id="commission_pct" name="commission_pct" value="<?= old('commission_pct') ?>" required>
                             </div>

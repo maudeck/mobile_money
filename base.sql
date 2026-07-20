@@ -113,45 +113,13 @@ CREATE TABLE IF NOT EXISTS commission_operateur (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     id_prefixe_source INTEGER NOT NULL,
     id_prefixe_dest INTEGER NOT NULL,
-    montant_min REAL NOT NULL,
-    montant_max REAL NOT NULL,
     commission_pct REAL NOT NULL DEFAULT 0,
     FOREIGN KEY (id_prefixe_source) REFERENCES prefixe_operateur(id),
     FOREIGN KEY (id_prefixe_dest) REFERENCES prefixe_operateur(id)
 );
 
-INSERT INTO commission_operateur (id_prefixe_source, id_prefixe_dest, montant_min, montant_max, commission_pct)
+INSERT INTO commission_operateur (id_prefixe_source, id_prefixe_dest, commission_pct)
 VALUES
-    -- Telma vers Orange
-    (3, 1, 100, 1000, 2),
-    (3, 1, 1001, 5000, 2),
-    (3, 1, 5001, 10000, 2),
-    (3, 1, 10001, 25000, 2),
-    (3, 1, 25001, 50000, 2),
-    (3, 1, 50001, 100000, 2),
-    (3, 1, 100001, 250000, 2),
-    (3, 1, 250001, 500000, 2),
-    (3, 1, 500001, 1000000, 2),
-    (3, 1, 1000001, 2000000, 2),
-    -- Telma vers Airtel
-    (3, 2, 100, 1000, 2),
-    (3, 2, 1001, 5000, 2),
-    (3, 2, 5001, 10000, 2),
-    (3, 2, 10001, 25000, 2),
-    (3, 2, 25001, 50000, 2),
-    (3, 2, 50001, 100000, 2),
-    (3, 2, 100001, 250000, 2),
-    (3, 2, 250001, 500000, 2),
-    (3, 2, 500001, 1000000, 2),
-    (3, 2, 1000001, 2000000, 2),
-    -- Telma vers Bip
-    (3, 4, 100, 1000, 2),
-    (3, 4, 1001, 5000, 2),
-    (3, 4, 5001, 10000, 2),
-    (3, 4, 10001, 25000, 2),
-    (3, 4, 25001, 50000, 2),
-    (3, 4, 50001, 100000, 2),
-    (3, 4, 100001, 250000, 2),
-    (3, 4, 250001, 500000, 2),
-    (3, 4, 500001, 1000000, 2),
-    (3, 4, 1000001, 2000000, 2);
+    (3, 1, 2),
+    (3, 2, 2),
+    (3, 4, 2);

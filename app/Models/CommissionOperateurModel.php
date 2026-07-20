@@ -8,7 +8,7 @@ class CommissionOperateurModel extends Model
 {
     protected $table = 'commission_operateur';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['id_prefixe_source', 'id_prefixe_dest', 'montant_min', 'montant_max', 'commission_pct'];
+    protected $allowedFields = ['id_prefixe_source', 'id_prefixe_dest', 'commission_pct'];
     protected $useAutoIncrement = true;
     protected $returnType = 'object';
     protected $useTimestamps = false;
@@ -26,16 +26,13 @@ class CommissionOperateurModel extends Model
     {
         return $this->where('id_prefixe_source', $idSource)
                     ->where('id_prefixe_dest', $idDest)
-                    ->orderBy('montant_min', 'ASC')
                     ->findAll();
     }
 
-    public function findTranche($idSource, $idDest, $montant)
+    public function findByOperateurs($idSource, $idDest)
     {
         return $this->where('id_prefixe_source', $idSource)
                     ->where('id_prefixe_dest', $idDest)
-                    ->where('montant_min <=', $montant)
-                    ->where('montant_max >=', $montant)
                     ->first();
     }
 }

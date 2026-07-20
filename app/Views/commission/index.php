@@ -73,8 +73,7 @@
                         <table class="table table-striped">
                             <thead>
                                 <tr>
-                                    <th class="number">Min (Ar)</th>
-                                    <th class="number">Max (Ar)</th>
+                                    <th>Destination</th>
                                     <th class="number">Commission (%)</th>
                                     <th>Action</th>
                                 </tr>
@@ -82,8 +81,7 @@
                             <tbody>
                                 <?php foreach ($tranches as $tranche): ?>
                                     <tr>
-                                        <td class="number"><?= number_format($tranche->montant_min, 0, ',', ' ') ?></td>
-                                        <td class="number"><?= number_format($tranche->montant_max, 0, ',', ' ') ?></td>
+                                        <td><?= esc($destName) ?></td>
                                         <td class="number"><?= number_format($tranche->commission_pct, 0, ',', ' ') ?></td>
                                         <td>
                                             <form action="<?= site_url('commission/delete/' . $tranche->id) ?>" method="post" class="d-inline" onsubmit="return confirm('Êtes-vous sûr ?');">
@@ -95,7 +93,7 @@
                                 <?php endforeach; ?>
                                 <?php if (empty($tranches)): ?>
                                     <tr>
-                                        <td colspan="4" class="text-center">Aucune tranche définie</td>
+                                        <td colspan="3" class="text-center">Aucune commission définie</td>
                                     </tr>
                                 <?php endif; ?>
                             </tbody>
