@@ -3,15 +3,6 @@
 /** @var float|int $solde */
 $titre = 'Mon solde — Mobile Money';
 ?>
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= esc($titre) ?></title>
-    <link href="<?= base_url('css/style.css') ?>" rel="stylesheet">
-</head>
-<body>
 <?= $this->include('client/template/header') ?>
 
 <div class="client-shell">
@@ -64,6 +55,4 @@ $titre = 'Mon solde — Mobile Money';
     </main>
 </div>
 
-<script src="<?= base_url('js/script.js') ?>"></script>
-</body>
-</html>
+<?= $this->include('client/template/footer') ?>
