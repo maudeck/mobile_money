@@ -13,9 +13,13 @@ class ClientModel extends Model
     protected $returnType = 'object';
     protected $useTimestamps = false;
 
-    public function findByUserId(int $userId): ?object
+    public function createForUser(int $userId, ?int $prefixeId = null): object
     {
-        $result = $this->where('id_user', $userId)->first();
-        return $result ?: null;
+        return $this->insert([
+            'id_user' => $userId,
+            'solde' => 0,
+            'date_creation' => date('Y-m-d H:i:s'),
+            'id_prefixe' => $prefixeId
+        ], true);
     }
 }
