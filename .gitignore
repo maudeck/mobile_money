@@ -1,0 +1,15 @@
+/vendor/
+/writable/cache/
+/writable/logs/
+/writable/session/
+/writable/uploads/
+
+.idea/
+.vscode/
+*.swp
+*.swo
+
+.DS_Store
+Thumbs.db
+
+composer.lock
