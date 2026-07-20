@@ -14,6 +14,12 @@ $routes->get('/logout', 'AuthController::logout');
 $routes->get('/admin/dashboard', 'AuthController::adminDashboard');
 $routes->get('/client/dashboard', 'ClientController::dashboard');
 $routes->get('/client/solde', 'ClientController::solde');
+$routes->get('/client/historique', 'ClientController::historique');
+$routes->post('/client/frais/(:segment)', 'ClientController::calculFrais/$1');
+$routes->post('/client/depot', 'ClientController::depot');
+$routes->post('/client/retrait', 'ClientController::retrait');
+$routes->post('/client/transfert', 'ClientController::transfert');
+$routes->get('/client/(:segment)', 'ClientController::operation/$1');
 
 $routes->get('/operateur', 'OperateurController::index');
 $routes->get('/operateur/create', 'OperateurController::create');

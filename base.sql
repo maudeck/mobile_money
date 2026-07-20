@@ -92,3 +92,19 @@ VALUES
     (250001, 500000, 1500, 3),
     (500001, 1000000, 2500, 3),
     (1000001, 2000000, 3000, 3);
+
+CREATE VIEW IF NOT EXISTS vue_historique AS
+SELECT 
+    o.id,
+    o.date_operation,
+    o.montant,
+    o.frais_applique,
+    t.libelle AS type_operation,
+    u_em.telephone AS emetteur_telephone,
+    u_dest.telephone AS destinataire_telephone
+FROM operation o
+JOIN type_operation t ON o.id_type_operation = t.id
+JOIN client c_em ON o.id_client_emetteur = c_em.id
+JOIN user u_em ON c_em.id_user = u_em.id
+LEFT JOIN client c_dest ON o.id_client_destinataire = c_dest.id
+LEFT JOIN user u_dest ON c_dest.id_user = u_dest.id;
