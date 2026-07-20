@@ -83,7 +83,7 @@
     var montantInput = form.querySelector("#montant");
     var feeDisplay = form.querySelector("#frais-display");
     var submitBtn = form.querySelector("button[type=submit]");
-    var beneficiaireSelect = form.querySelector("#beneficiaire");
+    var beneficiaireInput = form.querySelector("#beneficiaire");
     var fraisUrl = form.getAttribute("data-frais-url");
     var submitUrl = form.getAttribute("data-submit-url");
     var csrfName = form.getAttribute("data-csrf-name");
@@ -97,6 +97,10 @@
       feeDisplay.classList.toggle("is-error", !!isError);
     }
 
+    function getBeneficiaire() {
+      return beneficiaireInput ? beneficiaireInput.value.trim() : "";
+    }
+
     montantInput.addEventListener("input", function () {
       var montant = this.value;
       if (!montant) {
@@ -108,8 +112,8 @@
       var body =
         "montant=" +
         encodeURIComponent(montant) +
-        (beneficiaireSelect && beneficiaireSelect.value
-          ? "&beneficiaire=" + encodeURIComponent(beneficiaireSelect.value)
+        (beneficiaireInput && getBeneficiaire()
+          ? "&beneficiaire=" + encodeURIComponent(getBeneficiaire())
           : "") +
         "&" +
         csrfName +
@@ -164,13 +168,9 @@
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       var montant = montantInput.value;
-      var beneficiaire = beneficiaireSelect ? beneficiaireSelect.value : null;
+      var beneficiaire = getBeneficiaire();
 
-      if (
-        !montant ||
-        currentFrais === null ||
-        (beneficiaireSelect && !beneficiaire)
-      ) {
+      if (!montant || currentFrais === null || !beneficiaire) {
         window.alert(
           "Veuillez remplir tous les champs et attendre le calcul des frais.",
         );
@@ -182,9 +182,7 @@
         encodeURIComponent(montant) +
         "&frais_applique=" +
         encodeURIComponent(currentFrais) +
-        (beneficiaireSelect
-          ? "&beneficiaire=" + encodeURIComponent(beneficiaire)
-          : "") +
+        "&beneficiaire=" + encodeURIComponent(beneficiaire) +
         "&" +
         csrfName +
         "=" +
@@ -353,10 +351,6 @@
       var card = document.createElement("div");
       card.className = "card transfert-card";
       card.setAttribute("data-index", index);
-      var optionsHtml = '<option value="">-- Selectionner un beneficiaire --</option>';
-      clients.forEach(function (tel) {
-        optionsHtml += '<option value="' + tel + '">' + tel + '</option>';
-      });
       card.innerHTML =
         '<div class="card-body">' +
           '<button type="button" class="btn btn-danger btn-sm remove-transfert" style="float: right;" title="Supprimer ce transfert">' +
@@ -368,10 +362,8 @@
             '</svg>' +
           '</button>' +
           '<div class="field">' +
-            '<label for="beneficiaire_' + index + '" class="field-label">Beneficiaire</label>' +
-            '<select class="control beneficiaire-select" id="beneficiaire_' + index + '" required>' +
-              optionsHtml +
-            '</select>' +
+            '<label for="beneficiaire_' + index + '" class="field-label">Beneficiaire (Numero Telma 034)</label>' +
+            '<input type="text" class="control beneficiaire-input" id="beneficiaire_' + index + '" placeholder="034 00 000 00" required>' +
           '</div>' +
           '<div class="field">' +
             '<label class="field-label">Montant par beneficiaire</label>' +
@@ -382,10 +374,10 @@
           '</div>' +
         '</div>';
 
-      var select = card.querySelector("#beneficiaire_" + index);
-      if (select) {
-        select.addEventListener("change", function () {
-          var tel = this.value;
+      var input = card.querySelector("#beneficiaire_" + index);
+      if (input) {
+        input.addEventListener("input", function () {
+          var tel = this.value.trim();
           if (tel && tel.substring(0, 3) !== "034") {
             this.classList.add("is-error");
             this.style.borderColor = "var(--danger)";
@@ -444,8 +436,8 @@
 
       cards.forEach(function (card) {
         var idx = card.getAttribute("data-index");
-        var beneficiaireSelect = card.querySelector("#beneficiaire_" + idx);
-        var beneficiaire = beneficiaireSelect ? beneficiaireSelect.value : "";
+        var beneficiaireInput = card.querySelector("#beneficiaire_" + idx);
+        var beneficiaire = beneficiaireInput ? beneficiaireInput.value.trim() : "";
 
         if (!beneficiaire) {
           errorsDiv.innerHTML = '<div class="alert alert-danger"><span>Transfert #' + (parseInt(idx) + 1) + ' : beneficiaire manquant.</span></div>';

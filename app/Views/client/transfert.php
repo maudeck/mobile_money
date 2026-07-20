@@ -18,13 +18,8 @@ $titre = 'Transfert — Mobile Money';
             data-csrf-hash="<?= csrf_hash() ?>">
 
             <div class="field">
-                <label for="beneficiaire" class="field-label">Beneficiaire</label>
-                <select class="control" id="beneficiaire" name="beneficiaire" required>
-                    <option value="">-- Selectionner un beneficiaire --</option>
-                    <?php foreach ($clients as $client): ?>
-                        <option value="<?= esc($client->telephone) ?>"><?= esc($client->telephone) ?></option>
-                    <?php endforeach; ?>
-                </select>
+                <label for="beneficiaire" class="field-label">Beneficiaire (Numero Telma 034)</label>
+                <input type="text" class="control" id="beneficiaire" name="beneficiaire" placeholder="034 00 000 00" required>
             </div>
 
             <div class="field">
@@ -95,13 +90,8 @@ $titre = 'Transfert — Mobile Money';
                                 </svg>
                             </button>
                             <div class="field">
-                                <label for="beneficiaire_0" class="field-label">Beneficiaire</label>
-                                <select class="control beneficiaire-select" id="beneficiaire_0" required>
-                                    <option value="">-- Selectionner un beneficiaire --</option>
-                                    <?php foreach ($clients as $client): ?>
-                                        <option value="<?= esc($client->telephone) ?>"><?= esc($client->telephone) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
+                                <label for="beneficiaire_0" class="field-label">Beneficiaire (Numero Telma 034)</label>
+                                <input type="text" class="control beneficiaire-input" id="beneficiaire_0" placeholder="034 00 000 00" required>
                             </div>
                             <div class="field">
                                 <label class="field-label">Montant par beneficiaire</label>
