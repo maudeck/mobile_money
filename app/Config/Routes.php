@@ -12,7 +12,8 @@ $routes->post('/login/auth', 'AuthController::auth');
 $routes->get('/logout', 'AuthController::logout');
 
 $routes->get('/admin/dashboard', 'AuthController::adminDashboard');
-$routes->get('/client/dashboard', 'AuthController::clientDashboard');
+$routes->get('/client/dashboard', 'ClientController::dashboard');
+$routes->get('/client/solde', 'ClientController::solde');
 
 $routes->get('/operateur', 'OperateurController::index');
 $routes->get('/operateur/create', 'OperateurController::create');
@@ -37,3 +38,5 @@ $routes->post('/type-operation/delete-tranche/(:num)/(:num)', 'TypeOperationCont
 
 $routes->get('/admin/gains', 'StatistiqueController::gains');
 $routes->get('/admin/clients', 'StatistiqueController::clients');
+
+$routes->get('/test-db', 'TestController::index');

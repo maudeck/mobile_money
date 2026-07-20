@@ -53,10 +53,11 @@ CREATE TABLE IF NOT EXISTS operation (
     FOREIGN KEY (id_type_operation) REFERENCES type_operation(id)
 );
 -- Insertion des données
-insert into role (name) values ('admin'), ('client');
+insert into role (name)
+values ('admin'),
+    ('client');
 INSERT INTO user (telephone, role_id)
-VALUES ('0340000000', '1'),
-    ('0331278201', '2');
+VALUES ('0340000000', '1');
 INSERT INTO prefixe_operateur (code_prefixe, operateur_nom)
 VALUES ('032', 'Orange'),
     ('033', 'Airtel'),
