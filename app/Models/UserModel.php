@@ -8,7 +8,7 @@ class UserModel extends Model
 {
     protected $table = 'user';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['telephone', 'role'];
+    protected $allowedFields = ['telephone', 'role_id'];
     protected $useAutoIncrement = true;
     protected $returnType = 'object';
     protected $useTimestamps = false;
@@ -23,7 +23,7 @@ class UserModel extends Model
     {
         $this->insert([
             'telephone' => $telephone,
-            'role' => 'client'
+            'role_id' => 2
         ]);
         return $this->findByTelephone($telephone);
     }

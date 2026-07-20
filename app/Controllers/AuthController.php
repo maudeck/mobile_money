@@ -44,7 +44,7 @@ class AuthController extends BaseController
         $this->session->set([
             'user_id'    => $user->id,
             'telephone'  => $user->telephone,
-            'role'       => $user->role,
+            'role_id'    => $user->role_id,
             'isLoggedIn' => true
         ]);
 
@@ -53,28 +53,28 @@ class AuthController extends BaseController
 
     public function adminDashboard()
     {
-        $this->requireRole('admin');
+        $this->requireRole(1);
         return view('admin/dashboard');
     }
 
     public function clientDashboard()
     {
-        $this->requireRole('client');
+        $this->requireRole(2);
         return view('client/dashboard');
     }
 
-    private function requireRole(string $role)
+    private function requireRole(int $roleId)
     {
-        if (!$this->session->get('isLoggedIn') || $this->session->get('role') !== $role) {
+        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != $roleId) {
             return redirect()->to('/login');
         }
     }
 
     private function redirectToRole()
     {
-        $role = $this->session->get('role');
+        $role_id = $this->session->get('role_id');
 
-        if ($role === 'admin') {
+        if ($role_id == 1) {
             return redirect()->to('/admin/dashboard');
         }
 
