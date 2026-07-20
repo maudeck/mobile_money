@@ -393,7 +393,15 @@ class ClientController extends BaseController
             $commission = (float) $montant * ((float) $commissionInfo->commission_pct / 100);
         }
 
-        $totalDebit = (float) $montant + $commission;
+        $trancheModel = new TrancheFraisModel();
+        $tranche = $trancheModel->where('id_type_operation', $type->id)
+            ->where('montant_min <=', $montant)
+            ->where('montant_max >=', $montant)
+            ->first();
+
+        $fraisTransfert = $tranche ? (float) $tranche->frais : 0;
+
+        $totalDebit = (float) $montant + $fraisTransfert + $commission;
 
         if ($emetteur->solde < $totalDebit) {
             return $this->response->setJSON(['error' => 'Solde insuffisant'])->setStatusCode(400);
