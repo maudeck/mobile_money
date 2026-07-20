@@ -19,6 +19,7 @@ $routes->post('/client/frais/(:segment)', 'ClientController::calculFrais/$1');
 $routes->post('/client/depot', 'ClientController::depot');
 $routes->post('/client/retrait', 'ClientController::retrait');
 $routes->post('/client/transfert', 'ClientController::transfert');
+$routes->post('/client/transfert-multiple', 'ClientController::transfertMultiple');
 $routes->get('/client/(:segment)', 'ClientController::operation/$1');
 
 $routes->get('/operateur', 'OperateurController::index');
