@@ -1,3 +1,3 @@
 #!/bin/bash
-rm -f mobile_money.db
-sqlite3 mobile_money.db < base.sql
+rm -f writable/mobile_money.db
+sqlite3 writable/mobile_money.db < base.sql
