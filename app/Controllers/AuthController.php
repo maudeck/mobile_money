@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\UserModel;
+use App\Models\ClientModel;
 use CodeIgniter\Controller;
 
 class AuthController extends BaseController
@@ -37,8 +38,23 @@ class AuthController extends BaseController
         $user = $this->userModel->findByTelephone($telephone);
 
         if (!$user) {
+            $prefixe = substr($telephone, 0, 3);
+            $prefixeModel = new \App\Models\PrefixeOperateurModel();
+            $prefixeInfo = $prefixeModel->where('code_prefixe', $prefixe)->first();
+
+            if (!$prefixeInfo) {
+                return redirect()->to('/login')->with('error', 'Numéro de téléphone invalide : préfixe inconnu.');
+            }
+
             $this->userModel->createClient($telephone);
             $user = $this->userModel->findByTelephone($telephone);
+
+            db_connect()->table('client')->insert([
+                'id_user'       => $user->id,
+                'solde'         => 0,
+                'date_creation' => date('Y-m-d'),
+                'id_prefixe'    => $prefixeInfo->id,
+            ]);
         }
 
         $this->session->set([
