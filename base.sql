@@ -2,9 +2,16 @@
 CREATE TABLE IF NOT EXISTS user (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     telephone TEXT NOT NULL UNIQUE,
-    mdp TEXT NOT NULL
+    role TEXT NOT NULL
 );
+
+create table if not exists role (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE
+);
+insert into role (name) values ('admin'), ('employe');
+
 -- Insertion des données
-INSERT INTO user (telephone, mdp)
-VALUES ('0342334509', 'admin123'),
-    ('0331278201', 'emp123');
+INSERT INTO user (telephone, role)
+VALUES ('0340000000', '1'),
+    ('0331278201', '2');
