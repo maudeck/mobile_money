@@ -13,3 +13,5 @@ $routes->get('/logout', 'AuthController::logout');
 
 $routes->get('/admin/dashboard', 'AuthController::adminDashboard');
 $routes->get('/client/dashboard', 'AuthController::clientDashboard');
+
+$routes->get('/test-db', 'TestController::index');
