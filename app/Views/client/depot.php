@@ -47,7 +47,4 @@ $titre = ucfirst($type->libelle) . ' — Mobile Money';
     </div>
 </div>
 
-<!-- Inclusion du script spécifique à la gestion des formulaires d'opération -->
-<script src="<?= base_url('js/script.js') ?>"></script>
-
 <?= $this->include('client/template/footer') ?>
