@@ -12,6 +12,7 @@
     initConfirmForms();
     initFraisCalculator("retrait-form", "frais-retrait-url");
     initFraisCalculator("transfert-form", "frais-transfert-url");
+    initFraisCalculator("operation-form");
   });
 
   /* ---------------------------------------------------------------------
