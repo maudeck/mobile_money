@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tranches de Frais - <?= esc($type->libelle) ?></title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="<?= base_url('assets/bootstrap-5.3.2-dist/css/bootstrap.min.css') ?>" rel="stylesheet">
+    <link href="<?= base_url('assets/css/admin-custom.css') ?>" rel="stylesheet">
 </head>
 <body>
     <div class="container mt-5">
@@ -42,9 +43,9 @@
                     <tbody>
                         <?php foreach ($tranches as $tranche): ?>
                             <tr>
-                                <td><?= number_format($tranche->montant_min, 0, ',', ' ') ?></td>
-                                <td><?= number_format($tranche->montant_max, 0, ',', ' ') ?></td>
-                                <td><?= number_format($tranche->frais, 0, ',', ' ') ?></td>
+                                <td class="number"><?= number_format($tranche->montant_min, 0, ',', ' ') ?></td>
+                                <td class="number"><?= number_format($tranche->montant_max, 0, ',', ' ') ?></td>
+                                <td class="number"><?= number_format($tranche->frais, 0, ',', ' ') ?></td>
                                 <td>
                                     <form action="<?= site_url('type-operation/delete-tranche/' . $type->id . '/' . $tranche->id) ?>" method="post" class="d-inline" onsubmit="return confirm('Êtes-vous sûr ?');">
                                         <?= csrf_field() ?>

@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Opérateurs</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="<?= base_url('assets/bootstrap-5.3.2-dist/css/bootstrap.min.css') ?>" rel="stylesheet">
+    <link href="<?= base_url('assets/css/admin-custom.css') ?>" rel="stylesheet">
 </head>
 <body>
     <div class="container mt-5">
@@ -45,7 +46,7 @@
                                 <td><?= esc($operateur->id) ?></td>
                                 <td><?= esc($operateur->code_prefixe) ?></td>
                                 <td><?= esc($operateur->operateur_nom) ?></td>
-                                <td>
+                                <td class="action-buttons">
                                     <a href="<?= site_url('operateur/edit/' . $operateur->id) ?>" class="btn btn-sm btn-warning">Modifier</a>
                                     <form action="<?= site_url('operateur/delete/' . $operateur->id) ?>" method="post" class="d-inline" onsubmit="return confirm('Êtes-vous sûr ?');">
                                         <?= csrf_field() ?>

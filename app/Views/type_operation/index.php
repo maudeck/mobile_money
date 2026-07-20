@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Types d'Opérations</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="<?= base_url('assets/bootstrap-5.3.2-dist/css/bootstrap.min.css') ?>" rel="stylesheet">
+    <link href="<?= base_url('assets/css/admin-custom.css') ?>" rel="stylesheet">
 </head>
 <body>
     <div class="container mt-5">
@@ -43,7 +44,7 @@
                             <tr>
                                 <td><?= esc($type->id) ?></td>
                                 <td><?= esc($type->libelle) ?></td>
-                                <td>
+                                <td class="action-buttons">
                                     <a href="<?= site_url('type-operation/tranches/' . $type->id) ?>" class="btn btn-sm btn-info">Tranches</a>
                                     <a href="<?= site_url('type-operation/edit/' . $type->id) ?>" class="btn btn-sm btn-warning">Modifier</a>
                                     <form action="<?= site_url('type-operation/delete/' . $type->id) ?>" method="post" class="d-inline" onsubmit="return confirm('Êtes-vous sûr ?');">
