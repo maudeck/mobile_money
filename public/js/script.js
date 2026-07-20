@@ -170,7 +170,13 @@
       var montant = montantInput.value;
       var beneficiaire = getBeneficiaire();
 
-      if (!montant || currentFrais === null || !beneficiaire) {
+      if (!montant || currentFrais === null) {
+        window.alert(
+          "Veuillez remplir tous les champs et attendre le calcul des frais.",
+        );
+        return;
+      }
+      if (beneficiaireInput && !beneficiaire) {
         window.alert(
           "Veuillez remplir tous les champs et attendre le calcul des frais.",
         );
