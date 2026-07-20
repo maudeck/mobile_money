@@ -4,17 +4,20 @@ namespace App\Controllers;
 
 use App\Models\UserModel;
 use App\Models\ClientModel;
+use App\Models\OperateurModel;
 use CodeIgniter\Controller;
 
 class AuthController extends BaseController
 {
     protected $session;
     protected $userModel;
+    protected $clientModel;
 
     public function __construct()
     {
         $this->session = service('session');
         $this->userModel = new UserModel();
+        $this->clientModel = new ClientModel();
     }
 
     public function index()
@@ -39,8 +42,8 @@ class AuthController extends BaseController
 
         if (!$user) {
             $prefixe = substr($telephone, 0, 3);
-            $prefixeModel = new \App\Models\PrefixeOperateurModel();
-            $prefixeInfo = $prefixeModel->where('code_prefixe', $prefixe)->first();
+            $operateurModel = new OperateurModel();
+            $prefixeInfo = $operateurModel->where('code_prefixe', $prefixe)->first();
 
             if (!$prefixeInfo) {
                 return redirect()->to('/login')->with('error', 'Numéro de téléphone invalide : préfixe inconnu.');
@@ -49,12 +52,7 @@ class AuthController extends BaseController
             $this->userModel->createClient($telephone);
             $user = $this->userModel->findByTelephone($telephone);
 
-            db_connect()->table('client')->insert([
-                'id_user'       => $user->id,
-                'solde'         => 0,
-                'date_creation' => date('Y-m-d'),
-                'id_prefixe'    => $prefixeInfo->id,
-            ]);
+            $this->clientModel->createForUser($user->id, $prefixeInfo->id);
         }
 
         $this->session->set([
