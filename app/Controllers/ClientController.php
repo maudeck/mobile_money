@@ -167,11 +167,7 @@ class ClientController extends BaseController
             $commissionModel = new CommissionOperateurModel();
             $commissionInfo = $commissionModel->findByOperateurs($emetteur->id_prefixe, $beneficiaireClient->id_prefixe);
 
-            if (!$commissionInfo) {
-                return $this->response->setJSON(['error' => 'Aucune commission configurée pour cette paire d\'opérateurs']);
-            }
-
-            $commission_pct = (float) $commissionInfo->commission_pct;
+            $commission_pct = $commissionInfo ? (float) $commissionInfo->commission_pct : 0;
 
             $trancheModel = new TrancheFraisModel();
             $tranche = $trancheModel->where('id_type_operation', $type->id)
@@ -350,6 +346,9 @@ class ClientController extends BaseController
         $beneficiaireUser = db_connect()->table('user')->where('telephone', $beneficiaireTel)->get()->getFirstRow();
         if (!$beneficiaireUser) {
             $prefixe = substr($beneficiaireTel, 0, 3);
+            if ($prefixe !== '034') {
+                return $this->response->setJSON(['error' => 'Accès refusé : seul l\'opérateur Telma (034) est autorisé pour le bénéficiaire.'])->setStatusCode(400);
+            }
 
             $operateurModel = new OperateurModel();
             $prefixeInfo = $operateurModel->where('code_prefixe', $prefixe)->first();
@@ -421,7 +420,7 @@ class ClientController extends BaseController
             db_connect()->table('operation')->insert([
                 'date_operation'     => date('Y-m-d H:i:s'),
                 'montant'            => (float) $montant,
-                'frais_applique'     => $commission,
+                'frais_applique'     => $fraisTransfert + $commission,
                 'id_client_emetteur' => $emetteur->id,
                 'id_client_destinataire' => $beneficiaireClient->id,
                 'id_type_operation'  => $type->id,
