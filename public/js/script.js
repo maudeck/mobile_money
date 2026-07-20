@@ -108,6 +108,9 @@
       var body =
         "montant=" +
         encodeURIComponent(montant) +
+        (beneficiaireSelect && beneficiaireSelect.value
+          ? "&beneficiaire=" + encodeURIComponent(beneficiaireSelect.value)
+          : "") +
         "&" +
         csrfName +
         "=" +
@@ -122,19 +125,38 @@
         body: body,
       })
         .then(function (r) {
-          return r.json();
+          console.log("URL appelée:", fraisUrl);
+          console.log("Statut HTTP:", r.status, r.statusText);
+          console.log("Headers:", r.headers.get("content-type"));
+          return r.text().then(function (text) {
+            console.log("Réponse brute:", JSON.stringify(text));
+            try {
+              var data = JSON.parse(text);
+              if (!r.ok) {
+                var msg = data && data.error ? data.error : ("Erreur HTTP " + r.status + " " + r.statusText);
+                throw new Error(msg);
+              }
+              return data;
+            } catch (e) {
+              throw new Error("Réponse invalide (status=" + r.status + "): " + text.substring(0, 200));
+            }
+          });
         })
         .then(function (data) {
-          if (data.error) {
+          if (data && data.error) {
             setFee(data.error, true);
             currentFrais = null;
-          } else {
+          } else if (data && typeof data.frais !== 'undefined') {
             setFee("Frais : " + data.frais + " Ar", false);
             currentFrais = data.frais;
+          } else {
+            setFee("Erreur : réponse inattendue du serveur", true);
+            currentFrais = null;
           }
         })
-        .catch(function () {
-          setFee("Erreur lors du calcul des frais", true);
+        .catch(function (err) {
+          console.error("Erreur calcul frais:", err);
+          setFee("Erreur: " + err.message, true);
           currentFrais = null;
         });
     });

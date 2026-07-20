@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\ClientModel;
+use App\Models\CommissionOperateurModel;
 use App\Models\TypeOperationModel;
 use App\Models\TrancheFraisModel;
 use App\Models\VueHistoriqueModel;
