@@ -41,7 +41,37 @@ class ClientController extends BaseController
 
         $solde = $client ? $client->solde : 0;
 
-        return view('client/solde', ['solde' => $solde]);
+        $telephone = null;
+        $operateur = null;
+        $dateCreation = null;
+
+        if ($client) {
+            $user = db_connect()->table('user')->where('id', $client->id_user)->get()->getFirstRow();
+            $telephone = $user ? $user->telephone : null;
+
+            if ($client->id_prefixe) {
+                $prefixe = db_connect()->table('prefixe_operateur')->where('id', $client->id_prefixe)->get()->getFirstRow();
+                $operateur = $prefixe ? $prefixe->operateur_nom : null;
+            }
+
+            $dateCreation = $client->date_creation;
+        }
+
+        $db = \Config\Database::connect();
+        $query = $db->query("
+            SELECT COUNT(*) as total_operations
+            FROM operation
+            WHERE id_client_emetteur = ?
+        ", [$client->id ?? 0]);
+        $totalOperations = $query->getRow()->total_operations ?? 0;
+
+        return view('client/solde', [
+            'solde' => $solde,
+            'telephone' => $telephone,
+            'operateur' => $operateur,
+            'dateCreation' => $dateCreation,
+            'totalOperations' => $totalOperations
+        ]);
     }
 
     public function historique()

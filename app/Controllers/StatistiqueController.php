@@ -89,6 +89,24 @@ class StatistiqueController extends BaseController
     {
         $db = \Config\Database::connect();
 
+        $telephone = $this->request->getGet('telephone') ?? '';
+        $prefixe = $this->request->getGet('prefixe') ?? '';
+
+        $where = ["u.role_id = 2"];
+        $params = [];
+
+        if ($telephone !== '') {
+            $where[] = "u.telephone LIKE ?";
+            $params[] = "%" . $telephone . "%";
+        }
+
+        if ($prefixe !== '') {
+            $where[] = "p.code_prefixe = ?";
+            $params[] = $prefixe;
+        }
+
+        $whereSql = implode(' AND ', $where);
+
         $sql = "
             SELECT 
                 u.id,
@@ -102,13 +120,18 @@ class StatistiqueController extends BaseController
             JOIN client c ON c.id_user = u.id
             LEFT JOIN prefixe_operateur p ON p.id = c.id_prefixe
             LEFT JOIN operation o ON o.id_client_emetteur = c.id OR o.id_client_destinataire = c.id
-            WHERE u.role_id = 2
+            WHERE {$whereSql}
             GROUP BY u.id, u.telephone, c.solde, p.operateur_nom, p.code_prefixe, c.date_creation
             ORDER BY u.id ASC
         ";
 
-        $query = $db->query($sql);
+        $query = $db->query($sql, $params);
         $data['clients'] = $query->getResult();
+
+        $operateurs = $db->query("SELECT id, operateur_nom, code_prefixe FROM prefixe_operateur ORDER BY id ASC")->getResult();
+        $data['operateurs'] = $operateurs;
+        $data['telephone'] = $telephone;
+        $data['prefixe'] = $prefixe;
 
         return view('statistique/clients', $data);
     }
