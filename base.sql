@@ -1,25 +1,24 @@
-/* ============================================================
- 1. CREATION DES TABLES
- ============================================================ */
--- Table role
-CREATE TABLE IF NOT EXISTS role (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE
-);
--- Table user
+-- Création de la table user
 CREATE TABLE IF NOT EXISTS user (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     telephone TEXT NOT NULL UNIQUE,
     role_id INTEGER NOT NULL,
     FOREIGN KEY (role_id) REFERENCES role(id)
 );
--- Table prefixe_operateur
+
+CREATE TABLE IF NOT EXISTS role (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE
+);
+
+-- Création de la table prefixe_operateur
 CREATE TABLE IF NOT EXISTS prefixe_operateur (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     code_prefixe TEXT NOT NULL UNIQUE,
     operateur_nom TEXT NOT NULL
 );
--- Table client
+
+-- Création de la table client
 CREATE TABLE IF NOT EXISTS client (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     id_user INTEGER NOT NULL,
@@ -29,12 +28,14 @@ CREATE TABLE IF NOT EXISTS client (
     FOREIGN KEY (id_user) REFERENCES user(id),
     FOREIGN KEY (id_prefixe) REFERENCES prefixe_operateur(id)
 );
--- Table type_operation
+
+-- Création de la table type_operation
 CREATE TABLE IF NOT EXISTS type_operation (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     libelle TEXT NOT NULL UNIQUE
 );
--- Table tranche_frais
+
+-- Création de la table tranche_frais
 CREATE TABLE IF NOT EXISTS tranche_frais (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     montant_min REAL NOT NULL,
@@ -43,6 +44,7 @@ CREATE TABLE IF NOT EXISTS tranche_frais (
     id_type_operation INTEGER NOT NULL,
     FOREIGN KEY (id_type_operation) REFERENCES type_operation(id)
 );
+
 -- Table tranche_frais_option
 CREATE TABLE IF NOT EXISTS tranche_frais_option (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -52,7 +54,8 @@ CREATE TABLE IF NOT EXISTS tranche_frais_option (
     id_type_operation INTEGER NOT NULL,
     FOREIGN KEY (id_type_operation) REFERENCES type_operation(id)
 );
--- Table operation
+
+-- Création de la table operation
 CREATE TABLE IF NOT EXISTS operation (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     date_operation TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -66,6 +69,7 @@ CREATE TABLE IF NOT EXISTS operation (
     FOREIGN KEY (id_client_destinataire) REFERENCES client(id),
     FOREIGN KEY (id_type_operation) REFERENCES type_operation(id)
 );
+
 -- Table commission_operateur
 CREATE TABLE IF NOT EXISTS commission_operateur (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -75,6 +79,7 @@ CREATE TABLE IF NOT EXISTS commission_operateur (
     FOREIGN KEY (id_prefixe_source) REFERENCES prefixe_operateur(id),
     FOREIGN KEY (id_prefixe_dest) REFERENCES prefixe_operateur(id)
 );
+
 /* ============================================================
  2. CREATION DES VUES
  ============================================================ */
@@ -93,6 +98,7 @@ FROM operation o
     JOIN user u_em ON c_em.id_user = u_em.id
     LEFT JOIN client c_dest ON o.id_client_destinataire = c_dest.id
     LEFT JOIN user u_dest ON c_dest.id_user = u_dest.id;
+
 /* ============================================================
  3. INSERTION DES DONNEES
  ============================================================ */
@@ -100,28 +106,24 @@ FROM operation o
 INSERT INTO role (name)
 VALUES ('admin'),
     ('client');
--- Utilisateur administrateur
+
 INSERT INTO user (telephone, role_id)
-VALUES ('0340000000', 1);
--- Préfixes des opérateurs
+VALUES ('0340000000', '1');
+
 INSERT INTO prefixe_operateur (code_prefixe, operateur_nom)
 VALUES ('032', 'Orange'),
     ('033', 'Airtel'),
     ('034', 'Telma'),
     ('038', 'Bip');
--- Types d'opérations
+
 INSERT INTO type_operation (libelle)
 VALUES ('Depot'),
     ('Retrait'),
     ('Transfert');
--- Tranches de frais
-INSERT INTO tranche_frais (
-        montant_min,
-        montant_max,
-        frais,
-        id_type_operation
-    )
-VALUES -- Retrait (id = 2)
+
+INSERT INTO tranche_frais (montant_min, montant_max, frais, id_type_operation)
+VALUES
+    -- Retrait (id = 2)
     (100, 1000, 50, 2),
     (1001, 5000, 50, 2),
     (5001, 10000, 100, 2),
@@ -131,7 +133,7 @@ VALUES -- Retrait (id = 2)
     (100001, 250000, 1500, 2),
     (250001, 500000, 1500, 2),
     (500001, 1000000, 2500, 2),
-    (1000001, 2000000, 3000, 2),
+    (1000010, 2000000, 3000, 2),
     -- Transfert (id = 3)
     (100, 1000, 50, 3),
     (1001, 5000, 50, 3),
@@ -143,16 +145,14 @@ VALUES -- Retrait (id = 2)
     (250001, 500000, 1500, 3),
     (500001, 1000000, 2500, 3),
     (1000001, 2000000, 3000, 3);
--- Commissions entre opérateurs
-INSERT INTO commission_operateur (
-        id_prefixe_source,
-        id_prefixe_dest,
-        commission_pct
-    )
-VALUES (3, 1, 2),
+
+INSERT INTO commission_operateur (id_prefixe_source, id_prefixe_dest, commission_pct)
+VALUES
+    (3, 1, 2),
     (3, 2, 2),
     (3, 3, 0),
     (3, 4, 2);
+
 -- Tranches de frais optionnels (uniquement pour le transfert)
 INSERT INTO tranche_frais_option (
         montant_min,

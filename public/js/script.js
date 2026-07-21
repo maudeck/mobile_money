@@ -1,6 +1,6 @@
 /* =========================================================================
    MOBILE MONEY — script.js
-   Comportements partages : sidebar admin, alertes, confirmation de
+   Comportements partagés : sidebar admin, alertes, confirmation de
    suppression, calcul de frais en direct (retrait / transfert).
    ========================================================================= */
 (function () {
@@ -217,14 +217,6 @@
           currentFraisOption = 0;
           currentFraisRetrait = 0;
         });
-    }
-
-    if (ajouterFraisRetraitCheckbox) {
-      ajouterFraisRetraitCheckbox.addEventListener("change", function () {
-        if (montantInput.value) {
-          calculerFrais();
-        }
-      });
     }
 
     form.addEventListener("submit", function (e) {
@@ -586,17 +578,10 @@
       var beneficiaires = [];
       var hasError = false;
 
-      console.log("=== Validation transfert multiple ===");
-      console.log("Nombre de cartes:", cards.length);
-      console.log("Montant total:", montantTotalInput.value);
-      console.log("Frais total calculé:", currentFraisTotal);
-
       cards.forEach(function (card) {
         var idx = card.getAttribute("data-index");
         var beneficiaireInput = card.querySelector("#beneficiaire_" + idx);
         var beneficiaire = beneficiaireInput ? beneficiaireInput.value.trim() : "";
-
-        console.log("Carte", idx, "- beneficiaireInput:", beneficiaireInput, "- valeur:", JSON.stringify(beneficiaire));
 
         if (!beneficiaire) {
           errorsDiv.innerHTML = '<div class="alert alert-danger"><span>Transfert #' + (parseInt(idx) + 1) + ' : beneficiaire manquant.</span></div>';
