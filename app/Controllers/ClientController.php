@@ -242,6 +242,19 @@ class ClientController extends BaseController
             $frais = $tranche->frais;
             $commission_pct = 0;
 
+            $promotionPct = 0;
+            if ($emetteur -> id_prefixe == $beneficiaireClient -> id_prefixe) {
+                $promotionModel = new \App\Models\PromotionFraisModel(); 
+                -> where ('id_prefixe_dest', $beneficiaireClient -> id_prefixe)
+                -> first();
+                if($promotionPct > 0){
+                    $promotionPct = (float) $promotion -> reduction_pct;
+                }
+            }
+            if($promotionPct > 0 ){
+                $frais = $frais + (1- $promotionPct/100)
+            }
+
             $fraisRetrait = 0;
 
             if ($ajouterFraisRetrait) {
