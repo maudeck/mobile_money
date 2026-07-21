@@ -82,7 +82,7 @@
                         </svg>
                     </button>
                     <div class="topbar-title">
-                        <span>Administration</span>
+                        <span>Operateur</span>
                         <h2>Gains par frais</h2>
                     </div>
                 </div>
@@ -109,13 +109,26 @@
                 <?php endif; ?>
 
                 <div class="card mb-4">
-
-                <div class="card mb-4">
                     <div class="card-header">
                         <h5 class="mb-0">Gains globaux par type d'opération</h5>
                     </div>
                     <div class="card-body">
-                        <div class="table-responsive">
+                        <form method="get" action="<?= site_url('admin/gains') ?>" style="display:flex;gap:.7rem;flex-wrap:wrap;align-items:flex-end;flex:1;min-width:0;">
+                            <div class="field" style="flex:1 1 220px;margin-bottom:0;min-width:180px;">
+                                <label for="type_operation" class="field-label">Type d'opération</label>
+                                <select class="control" id="type_operation" name="type_operation">
+                                    <option value="">Tous les types</option>
+                                    <?php foreach ($types ?? [] as $type): ?>
+                                        <option value="<?= esc($type->libelle) ?>" <?= ($typeOperation ?? '') === $type->libelle ? 'selected' : '' ?>>
+                                            <?= esc($type->libelle) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Filtrer</button>
+                            <a href="<?= site_url('admin/gains') ?>" class="btn btn-secondary">Reinitialiser</a>
+                        </form>
+                        <div class="table-responsive mt-3">
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
@@ -148,7 +161,22 @@
                         <h5 class="mb-0">Gains par opérateur source (Transferts)</h5>
                     </div>
                     <div class="card-body">
-                        <div class="table-responsive">
+                        <form method="get" action="<?= site_url('admin/gains') ?>" style="display:flex;gap:.7rem;flex-wrap:wrap;align-items:flex-end;flex:1;min-width:0;">
+                            <div class="field" style="flex:1 1 220px;margin-bottom:0;min-width:180px;">
+                                <label for="operateur_source" class="field-label">Opérateur source</label>
+                                <select class="control" id="operateur_source" name="operateur_source">
+                                    <option value="">Tous les opérateurs</option>
+                                    <?php foreach ($operateurs ?? [] as $op): ?>
+                                        <option value="<?= esc($op->code_prefixe) ?>" <?= ($operateurSource ?? '') === $op->code_prefixe ? 'selected' : '' ?>>
+                                            <?= esc($op->operateur_nom) ?> (<?= esc($op->code_prefixe) ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Filtrer</button>
+                            <a href="<?= site_url('admin/gains') ?>" class="btn btn-secondary">Reinitialiser</a>
+                        </form>
+                        <div class="table-responsive mt-3">
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
@@ -178,12 +206,27 @@
                     </div>
                 </div>
 
-                <div class="card">
+                <div class="card mb-4">
                     <div class="card-header">
                         <h5 class="mb-0">Montants à envoyer aux opérateurs (Commissions)</h5>
                     </div>
                     <div class="card-body">
-                        <div class="table-responsive">
+                        <form method="get" action="<?= site_url('admin/gains') ?>" style="display:flex;gap:.7rem;flex-wrap:wrap;align-items:flex-end;flex:1;min-width:0;">
+                            <div class="field" style="flex:1 1 220px;margin-bottom:0;min-width:180px;">
+                                <label for="operateur_dest" class="field-label">Opérateur destinataire</label>
+                                <select class="control" id="operateur_dest" name="operateur_dest">
+                                    <option value="">Tous les opérateurs</option>
+                                    <?php foreach ($operateurs ?? [] as $op): ?>
+                                        <option value="<?= esc($op->code_prefixe) ?>" <?= ($operateurDest ?? '') === $op->code_prefixe ? 'selected' : '' ?>>
+                                            <?= esc($op->operateur_nom) ?> (<?= esc($op->code_prefixe) ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Filtrer</button>
+                            <a href="<?= site_url('admin/gains') ?>" class="btn btn-secondary">Reinitialiser</a>
+                        </form>
+                        <div class="table-responsive mt-3">
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
