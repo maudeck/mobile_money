@@ -326,34 +326,13 @@
         currentFraisTotal = 0;
         return;
       }
-
-      var premierBeneficiaire = "";
-      var cardsTmp = container.querySelectorAll(".transfert-card");
-      for (var i = 0; i < cardsTmp.length; i++) {
-        var idxTmp = cardsTmp[i].getAttribute("data-index");
-        var inputTmp = cardsTmp[i].querySelector("#beneficiaire_" + idxTmp);
-        if (inputTmp && inputTmp.value.trim()) {
-          premierBeneficiaire = inputTmp.value.trim();
-          break;
-        }
-      }
-
-      var body =
-        "montant=" +
-        encodeURIComponent(montantTotal) +
-        (premierBeneficiaire ? "&beneficiaire=" + encodeURIComponent(premierBeneficiaire) : "") +
-        "&" +
-        csrfName +
-        "=" +
-        csrfHash;
-
       fetch(fraisUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
           "X-Requested-With": "XMLHttpRequest",
         },
-        body: body,
+        body: "montant=" + encodeURIComponent(montantTotal) + "&" + csrfName + "=" + csrfHash,
       })
         .then(function (r) { return r.json(); })
         .then(function (data) {
@@ -461,17 +440,10 @@
       var beneficiaires = [];
       var hasError = false;
 
-      console.log("=== Validation transfert multiple ===");
-      console.log("Nombre de cartes:", cards.length);
-      console.log("Montant total:", montantTotalInput.value);
-      console.log("Frais total calculé:", currentFraisTotal);
-
       cards.forEach(function (card) {
         var idx = card.getAttribute("data-index");
         var beneficiaireInput = card.querySelector("#beneficiaire_" + idx);
         var beneficiaire = beneficiaireInput ? beneficiaireInput.value.trim() : "";
-
-        console.log("Carte", idx, "- beneficiaireInput:", beneficiaireInput, "- valeur:", JSON.stringify(beneficiaire));
 
         if (!beneficiaire) {
           errorsDiv.innerHTML = '<div class="alert alert-danger"><span>Transfert #' + (parseInt(idx) + 1) + ' : beneficiaire manquant.</span></div>';
