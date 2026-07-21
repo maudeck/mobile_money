@@ -595,6 +595,11 @@ class ClientController extends BaseController
                     return $this->response->setJSON(['error' => 'Beneficiaire introuvable : ' . $tel])->setStatusCode(404);
                 }
 
+                if ((int) $emetteur->id_user === (int) $beneficiaireUser->id) {
+                    db_connect()->transRollback();
+                    return $this->response->setJSON(['error' => 'Vous ne pouvez pas transférer de l\'argent à votre propre numéro de téléphone : ' . $tel])->setStatusCode(400);
+                }
+
                 $beneficiaireClient = $clientModel->findByUserId($beneficiaireUser->id);
                 if (!$beneficiaireClient) {
                     $prefixe = substr($tel, 0, 3);

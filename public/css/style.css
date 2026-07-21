@@ -329,6 +329,31 @@ table.table th.number{text-align:right;}
 
 .list-card{background:var(--paper);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-sm);}
 
+.beneficiaire-grid{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;}
+.beneficiaire-chip{
+  display:inline-flex;align-items:center;gap:.4rem;
+  background:var(--navy);color:#fff;
+  border-radius:var(--radius-sm);
+  padding:.45rem .6rem;
+  font-size:.8rem;font-weight:600;
+  box-shadow:var(--shadow-sm);
+}
+.beneficiaire-chip .chip-remove{
+  background:transparent;border:none;color:#fff;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  width:18px;height:18px;border-radius:50%;
+}
+.beneficiaire-chip .chip-remove:hover{background:rgba(255,255,255,.15);}
+.beneficiaire-add{
+  width:38px;height:38px;border-radius:var(--radius-sm);
+  background:var(--navy-700);color:#fff;
+  border:1px solid var(--navy);cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:1.1rem;font-weight:700;
+  box-shadow:var(--shadow-sm);
+}
+.beneficiaire-add:hover{background:var(--ink);}
+
 .bottom-nav{
   position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:560px;
   height:var(--bottom-nav-h);background:var(--paper);border-top:1px solid var(--border);
