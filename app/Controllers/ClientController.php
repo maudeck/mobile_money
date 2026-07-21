@@ -432,6 +432,10 @@ class ClientController extends BaseController
             $beneficiaireUser = db_connect()->table('user')->where('telephone', $beneficiaireTel)->get()->getFirstRow();
         }
 
+        if ((int) $emetteur->id_user === (int) $beneficiaireUser->id) {
+            return $this->response->setJSON(['error' => 'Vous ne pouvez pas transférer de l\'argent à votre propre numéro de téléphone.'])->setStatusCode(400);
+        }
+
         $beneficiaireClient = $clientModel->findByUserId($beneficiaireUser->id);
         if (!$beneficiaireClient) {
             $prefixe = substr($beneficiaireTel, 0, 3);
