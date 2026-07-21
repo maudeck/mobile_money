@@ -30,7 +30,7 @@
                 <a href="<?= site_url('operateur') ?>" class="sidebar-nav-item">
                     <svg class="icon" viewBox="0 0 24 24">
                         <circle cx="12" cy="12" r="3" />
-                        <path d="M19.4 15a1.7 1.7 0 00.34 1.87 2 2 0 11-2.83 2.83 1.7 1.7 0 00-1.87-.34 1.7 1.7 0 00-1.04 1.56V21a2 2 0 11-4 0v-.09a1.7 1.7 0 00-1.04-1.56 1.7 1.7 0 00-1.87.34 2 2 0 11-2.83-2.83 1.7 1.7 0 00.34-1.87 1.7 1.7 0 00-1.56-1.04H3a2 2 0 110-4h.09a1.7 1.7 0 001.56-1.04 1.7 1.7 0 00-.34-1.87 2 2 0 112.83-2.83 1.7 1.7 0 001.87.34H9a1.7 1.7 0 001.04-1.56V3a2 2 0 114 0v.09a1.7 1.7 0 001.04 1.56 1.7 1.7 0 001.87-.34 2 2 0 112.83 2.83 1.7 1.7 0 00-.34 1.87V9a1.7 1.7 0 001.56 1.04H21a2 2 0 110 4h-.09a1.7 1.7 0 00-1.56 1.04z" />
+                        <path d="M19.4 15a1.7 1.7 0 00.34 1.87 2 2 0 11-2.83 2.83 1.7 1.7 0 00-1.87-.34 1.7 1.7 0 00-1.04 1.56V21a2 2 0 11-4 0v-.09a1.7 1.7 0 00-1.04-1.56 1.7 1.7 0 00-1.87.34l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.7 1.7 0 001.56-1.04H3a2 2 0 110-4h.09a1.7 1.7 0 00-1.56-1.04 1.7 1.7 0 00-.34-1.87l-.06-.06a2 2 0 112.83-2.83l.06.06a1.7 1.7 0 001.87.34H9a1.7 1.7 0 001.04-1.56V3a2 2 0 114 0v.09a1.7 1.7 0 001.04 1.56 1.7 1.7 0 001.87-.34l-.06-.06a2 2 0 112.83 2.83l.06.06a1.7 1.7 0 00-.34 1.87V9a1.7 1.7 0 001.56 1.04H21a2 2 0 110 4h-.09a1.7 1.7 0 00-1.56 1.04z" />
                     </svg>
                     Operateurs
                 </a>
@@ -82,7 +82,7 @@
                         </svg>
                     </button>
                     <div class="topbar-title">
-                        <span>Operateur</span>
+                        <span>Administration</span>
                         <h2>Gains par frais</h2>
                     </div>
                 </div>
@@ -108,27 +108,22 @@
                     </div>
                 <?php endif; ?>
 
-                <div class="card mb-4">
+                <div style="display:flex;gap:.6rem;margin-bottom:1.2rem;flex-wrap:wrap;">
+                    <a href="<?= site_url('admin/gains?type=Retrait') ?>" class="btn btn-primary" style="background:var(--navy);color:#fff;">
+                        Retrait
+                    </a>
+                    <a href="<?= site_url('admin/gains?type=Transfert') ?>" class="btn btn-primary" style="background:var(--navy);color:#fff;">
+                        Transfert
+                    </a>
+                </div>
+
+                <?php if (($type ?? '') === '' || ($type ?? '') === 'Retrait'): ?>
+                <div class="card mb-4" data-section="retrait">
                     <div class="card-header">
-                        <h5 class="mb-0">Gains globaux par type d'opération</h5>
+                        <h5 class="mb-0">Gains par type d'opération</h5>
                     </div>
                     <div class="card-body">
-                        <form method="get" action="<?= site_url('admin/gains') ?>" style="display:flex;gap:.7rem;flex-wrap:wrap;align-items:flex-end;flex:1;min-width:0;">
-                            <div class="field" style="flex:1 1 220px;margin-bottom:0;min-width:180px;">
-                                <label for="type_operation" class="field-label">Type d'opération</label>
-                                <select class="control" id="type_operation" name="type_operation">
-                                    <option value="">Tous les types</option>
-                                    <?php foreach ($types ?? [] as $type): ?>
-                                        <option value="<?= esc($type->libelle) ?>" <?= ($typeOperation ?? '') === $type->libelle ? 'selected' : '' ?>>
-                                            <?= esc($type->libelle) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Filtrer</button>
-                            <a href="<?= site_url('admin/gains') ?>" class="btn btn-secondary">Reinitialiser</a>
-                        </form>
-                        <div class="table-responsive mt-3">
+                        <div class="table-responsive">
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
@@ -155,13 +150,16 @@
                         </div>
                     </div>
                 </div>
+                <?php endif; ?>
 
-                <div class="card mb-4">
+                <?php if (($type ?? '') === '' || ($type ?? '') === 'Transfert'): ?>
+                <div class="card mb-4" data-section="transfert">
                     <div class="card-header">
                         <h5 class="mb-0">Gains par opérateur source (Transferts)</h5>
                     </div>
                     <div class="card-body">
                         <form method="get" action="<?= site_url('admin/gains') ?>" style="display:flex;gap:.7rem;flex-wrap:wrap;align-items:flex-end;flex:1;min-width:0;">
+                            <input type="hidden" name="type" value="<?= esc($type ?? '') ?>">
                             <div class="field" style="flex:1 1 220px;margin-bottom:0;min-width:180px;">
                                 <label for="operateur_source" class="field-label">Opérateur source</label>
                                 <select class="control" id="operateur_source" name="operateur_source">
@@ -174,7 +172,7 @@
                                 </select>
                             </div>
                             <button type="submit" class="btn btn-primary">Filtrer</button>
-                            <a href="<?= site_url('admin/gains') ?>" class="btn btn-secondary">Reinitialiser</a>
+                            <a href="<?= site_url('admin/gains?type=Transfert') ?>" class="btn btn-secondary">Reinitialiser</a>
                         </form>
                         <div class="table-responsive mt-3">
                             <table class="table table-striped">
@@ -206,12 +204,13 @@
                     </div>
                 </div>
 
-                <div class="card mb-4">
+                <div class="card mb-4" data-section="transfert">
                     <div class="card-header">
                         <h5 class="mb-0">Montants à envoyer aux opérateurs (Commissions)</h5>
                     </div>
                     <div class="card-body">
                         <form method="get" action="<?= site_url('admin/gains') ?>" style="display:flex;gap:.7rem;flex-wrap:wrap;align-items:flex-end;flex:1;min-width:0;">
+                            <input type="hidden" name="type" value="<?= esc($type ?? '') ?>">
                             <div class="field" style="flex:1 1 220px;margin-bottom:0;min-width:180px;">
                                 <label for="operateur_dest" class="field-label">Opérateur destinataire</label>
                                 <select class="control" id="operateur_dest" name="operateur_dest">
@@ -224,7 +223,7 @@
                                 </select>
                             </div>
                             <button type="submit" class="btn btn-primary">Filtrer</button>
-                            <a href="<?= site_url('admin/gains') ?>" class="btn btn-secondary">Reinitialiser</a>
+                            <a href="<?= site_url('admin/gains?type=Transfert') ?>" class="btn btn-secondary">Reinitialiser</a>
                         </form>
                         <div class="table-responsive mt-3">
                             <table class="table table-striped">
@@ -253,6 +252,7 @@
                         </div>
                     </div>
                 </div>
+                <?php endif; ?>
             </main>
         </div>
     </div>

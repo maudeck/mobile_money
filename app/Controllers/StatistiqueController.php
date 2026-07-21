@@ -17,16 +17,22 @@ class StatistiqueController extends BaseController
     {
         $db = \Config\Database::connect();
 
-        $typeOperation = $this->request->getGet('type_operation') ?? '';
+        $type = $this->request->getGet('type') ?? '';
         $operateurSource = $this->request->getGet('operateur_source') ?? '';
         $operateurDest = $this->request->getGet('operateur_dest') ?? '';
 
-        $whereGains = ["t.libelle IN ('Retrait', 'Transfert')"];
+        $showRetrait = $type === '' || $type === 'Retrait';
+        $showTransfert = $type === '' || $type === 'Transfert';
+
+        $whereGains = [];
         $paramsGains = [];
 
-        if ($typeOperation !== '') {
-            $whereGains[] = "t.libelle = ?";
-            $paramsGains[] = $typeOperation;
+        if (!$showRetrait) {
+            $whereGains[] = "t.libelle = 'Retrait'";
+        } elseif (!$showTransfert) {
+            $whereGains[] = "t.libelle = 'Transfert'";
+        } else {
+            $whereGains[] = "t.libelle IN ('Retrait', 'Transfert')";
         }
 
         if ($operateurSource !== '') {
@@ -103,6 +109,7 @@ class StatistiqueController extends BaseController
             JOIN client c_em ON o.id_client_emetteur = c_em.id
             JOIN client c_dest ON o.id_client_destinataire = c_dest.id
             JOIN prefixe_operateur po_dest ON c_dest.id_prefixe = po_dest.id
+            JOIN user u ON c_dest.id_user = u.id
             LEFT JOIN commission_operateur co ON co.id_prefixe_source = c_em.id_prefixe AND co.id_prefixe_dest = c_dest.id_prefixe
             JOIN type_operation t ON o.id_type_operation = t.id
             {$whereCommissionsSql}
@@ -115,7 +122,7 @@ class StatistiqueController extends BaseController
 
         $operateurs = $db->query("SELECT id, operateur_nom, code_prefixe FROM prefixe_operateur ORDER BY id ASC")->getResult();
         $data['operateurs'] = $operateurs;
-        $data['typeOperation'] = $typeOperation;
+        $data['type'] = $type;
         $data['operateurSource'] = $operateurSource;
         $data['operateurDest'] = $operateurDest;
 
