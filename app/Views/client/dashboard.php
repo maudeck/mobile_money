@@ -21,6 +21,12 @@
             </svg></span>
         Mon solde
     </a>
+    <a href="<?= site_url('client/epargne') ?>" class="quick-action">
+        <span class="quick-icon"><svg class="icon" viewBox="0 0 24 24">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+            </svg></span>
+        Mon épargne
+    </a>
     <?php foreach (get_operation_types() as $type): ?>
         <a href="<?= site_url('client/' . strtolower($type->libelle)) ?>" class="quick-action">
             <span class="quick-icon"><svg class="icon" viewBox="0 0 24 24">
