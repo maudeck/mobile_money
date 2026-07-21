@@ -45,8 +45,12 @@ $titre = 'Historique — Mobile Money';
                     </div>
                 </div>
                 <div class="op-amount tabular">
+                    <?php $totalFrais = $op->frais_applique + ($op->frais_option_applique ?? 0); ?>
                     <?= number_format($op->montant, 0, ',', ' ') ?> Ar
-                    <span class="op-fee">frais <?= number_format($op->frais_applique, 0, ',', ' ') ?> Ar</span>
+                    <span class="op-fee">Frais : <?= number_format($totalFrais, 0, ',', ' ') ?> Ar</span>
+                    <?php if (!empty($op->frais_option_applique)): ?>
+                        <span class="op-fee-option">(dont frais de retrait <?= number_format($op->frais_option_applique, 0, ',', ' ') ?> Ar)</span>
+                    <?php endif; ?>
                 </div>
             </div>
         <?php endforeach; ?>
