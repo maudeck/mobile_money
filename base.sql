@@ -43,12 +43,22 @@ CREATE TABLE IF NOT EXISTS tranche_frais (
     id_type_operation INTEGER NOT NULL,
     FOREIGN KEY (id_type_operation) REFERENCES type_operation(id)
 );
+-- Table tranche_frais_option
+CREATE TABLE IF NOT EXISTS tranche_frais_option (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    montant_min REAL NOT NULL,
+    montant_max REAL NOT NULL,
+    frais_option REAL NOT NULL,
+    id_type_operation INTEGER NOT NULL,
+    FOREIGN KEY (id_type_operation) REFERENCES type_operation(id)
+);
 -- Table operation
 CREATE TABLE IF NOT EXISTS operation (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     date_operation TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     montant REAL NOT NULL,
     frais_applique REAL NOT NULL DEFAULT 0,
+    frais_option_applique REAL DEFAULT NULL,
     id_client_emetteur INTEGER NOT NULL,
     id_client_destinataire INTEGER,
     id_type_operation INTEGER NOT NULL,
@@ -73,6 +83,7 @@ SELECT o.id,
     o.date_operation,
     o.montant,
     o.frais_applique,
+    o.frais_option_applique,
     t.libelle AS type_operation,
     u_em.telephone AS emetteur_telephone,
     u_dest.telephone AS destinataire_telephone
@@ -142,3 +153,21 @@ VALUES (3, 1, 2),
     (3, 2, 2),
     (3, 3, 0),
     (3, 4, 2);
+-- Tranches de frais optionnels (uniquement pour le transfert)
+INSERT INTO tranche_frais_option (
+        montant_min,
+        montant_max,
+        frais_option,
+        id_type_operation
+    )
+VALUES -- Transfert (id = 3)
+    (100, 1000, 10, 3),
+    (1001, 5000, 25, 3),
+    (5001, 10000, 50, 3),
+    (10001, 25000, 100, 3),
+    (25001, 50000, 200, 3),
+    (50001, 100000, 400, 3),
+    (100001, 250000, 750, 3),
+    (250001, 500000, 1500, 3),
+    (500001, 1000000, 2500, 3),
+    (1000001, 2000000, 4000, 3);

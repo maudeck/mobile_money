@@ -18,8 +18,8 @@ $titre = 'Transfert — Mobile Money';
             data-csrf-hash="<?= csrf_hash() ?>">
 
             <div class="field">
-                <label for="beneficiaire" class="field-label">Beneficiaire (Numero Telma 034)</label>
-                <input type="text" class="control" id="beneficiaire" name="beneficiaire" placeholder="034 00 000 00" required>
+                <label for="beneficiaire" class="field-label">Beneficiaire</label>
+                <input type="text" class="control" id="beneficiaire" name="beneficiaire" placeholder="Numero de telephone" required>
             </div>
 
             <div class="field">
@@ -39,6 +39,13 @@ $titre = 'Transfert — Mobile Money';
                     </svg>
                     Frais : —
                 </div>
+            </div>
+
+            <div class="field">
+                <label class="field-checkbox">
+                    <input type="checkbox" id="ajouter-frais-retrait" name="ajouter_frais_retrait" value="1">
+                    <span>Ajouter les frais de retrait</span>
+                </label>
             </div>
 
             <button type="submit" class="btn btn-accent btn-block">
@@ -103,6 +110,13 @@ $titre = 'Transfert — Mobile Money';
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div class="field">
+                <label class="field-checkbox">
+                    <input type="checkbox" id="ajouter-frais-retrait-multiple" value="1">
+                    <span>Ajouter les frais de retrait</span>
+                </label>
             </div>
 
             <button type="button" class="btn btn-secondary btn-block" id="add-transfert" style="margin-top: 1rem;">
