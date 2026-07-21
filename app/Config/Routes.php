@@ -15,6 +15,8 @@ $routes->get('/admin/dashboard', 'AuthController::adminDashboard');
 $routes->get('/client/dashboard', 'ClientController::dashboard');
 $routes->get('/client/solde', 'ClientController::solde');
 $routes->get('/client/historique', 'ClientController::historique');
+$routes->get('/client/epargne', 'ClientController::epargne');
+$routes->post('/client/epargne', 'ClientController::epargne');
 $routes->post('/client/frais/(:segment)', 'ClientController::calculFrais/$1');
 $routes->post('/client/depot', 'ClientController::depot');
 $routes->post('/client/retrait', 'ClientController::retrait');

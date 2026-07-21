@@ -10,6 +10,7 @@ use App\Models\TrancheFraisModel;
 use App\Models\TrancheFraisOptionModel;
 use App\Models\UserModel;
 use App\Models\VueHistoriqueModel;
+use App\Models\EpargneModel;
 use CodeIgniter\Controller;
 
 class ClientController extends BaseController
@@ -319,11 +320,7 @@ class ClientController extends BaseController
 
         db_connect()->transStart();
 
-        db_connect()->table('client')->where('id', $client->id)->update([
-            'solde' => $client->solde + (float) $montant,
-        ]);
-
-        db_connect()->table('operation')->insert([
+        $operationId = db_connect()->table('operation')->insertGetId([
             'date_operation'     => date('Y-m-d H:i:s'),
             'montant'            => (float) $montant,
             'frais_applique'     => (float) $fraisApp,
@@ -333,13 +330,19 @@ class ClientController extends BaseController
             'id_type_operation'  => $type->id,
         ]);
 
+        $epargneResult = $this->appliquerEpargne($client->id, (float) $montant, $operationId);
+
+        db_connect()->table('client')->where('id', $client->id)->update([
+            'solde' => $client->solde + $epargneResult['montant_solde'],
+        ]);
+
         db_connect()->transComplete();
 
         if (db_connect()->transStatus() === false) {
             return $this->response->setStatusCode(500)->setJSON(['error' => 'Erreur lors de l\'enregistrement']);
         }
 
-        return $this->response->setJSON(['success' => true, 'nouveau_solde' => $client->solde + (float) $montant]);
+        return $this->response->setJSON(['success' => true, 'nouveau_solde' => $client->solde + $epargneResult['montant_solde'], 'epargne' => $epargneResult]);
     }
 
     public function retrait()
@@ -520,11 +523,7 @@ class ClientController extends BaseController
                 'solde' => $emetteur->solde - $totalDebit,
             ]);
 
-            db_connect()->table('client')->where('id', $beneficiaireClient->id)->update([
-                'solde' => $beneficiaireClient->solde + (float) $montant + (float) ($fraisOptionApp ?? 0),
-            ]);
-
-            db_connect()->table('operation')->insert([
+            $operationId = db_connect()->table('operation')->insertGetId([
                 'date_operation'     => date('Y-m-d H:i:s'),
                 'montant'            => (float) $montant,
                 'frais_applique'     => $fraisTransfert + $commission,
@@ -534,7 +533,13 @@ class ClientController extends BaseController
                 'id_type_operation'  => $type->id,
             ]);
 
-            log_message('info', 'TRANSFERT DEBUG: montant=' . $montant . ' fraisTransfert=' . $fraisTransfert . ' commission=' . $commission . ' fraisOptionApp=' . $fraisOptionApp . ' totalDebit=' . $totalDebit . ' insert_frais_applique=' . ($fraisTransfert + $commission));
+            $epargneResult = $this->appliquerEpargne($beneficiaireClient->id, (float) $montant + (float) ($fraisOptionApp ?? 0), $operationId);
+
+            db_connect()->table('client')->where('id', $beneficiaireClient->id)->update([
+                'solde' => $beneficiaireClient->solde + $epargneResult['montant_solde'],
+            ]);
+
+            log_message('info', 'TRANSFERT DEBUG: montant=' . $montant . ' fraisTransfert=' . $fraisTransfert . ' commission=' . $commission . ' fraisOptionApp=' . $fraisOptionApp . ' totalDebit=' . $totalDebit . ' insert_frais_applique=' . ($fraisTransfert + $commission) . ' epargne=' . $epargneResult['montant_epargne']);
 
             db_connect()->transComplete();
 
@@ -649,19 +654,20 @@ class ClientController extends BaseController
                     return $this->response->setJSON(['error' => 'Beneficiaire introuvable : ' . $tel])->setStatusCode(404);
                 }
 
-                db_connect()->table('client')->where('id', $beneficiaireClient->id)->update([
-                    'solde' => $beneficiaireClient->solde + $montantParBeneficiaire + $fraisOptionApp,
-                ]);
-
-                db_connect()->table('operation')->insert([
+                $operationId = db_connect()->table('operation')->insertGetId([
                     'date_operation'     => date('Y-m-d H:i:s'),
                     'montant'            => $montantParBeneficiaire,
                     'frais_applique'     => $fraisApp,
                     'frais_option_applique' => $fraisOptionApp !== null && is_numeric($fraisOptionApp) ? (float) $fraisOptionApp : null,
-                    
                     'id_client_emetteur' => $emetteur->id,
                     'id_client_destinataire' => $beneficiaireClient->id,
                     'id_type_operation'  => $type->id,
+                ]);
+
+                $epargneResult = $this->appliquerEpargne($beneficiaireClient->id, $montantParBeneficiaire + $fraisOptionApp, $operationId);
+
+                db_connect()->table('client')->where('id', $beneficiaireClient->id)->update([
+                    'solde' => $beneficiaireClient->solde + $epargneResult['montant_solde'],
                 ]);
             }
 
@@ -676,5 +682,97 @@ class ClientController extends BaseController
             log_message('error', $e->getMessage());
             return $this->response->setJSON(['error' => 'Erreur serveur: ' . $e->getMessage()])->setStatusCode(500);
         }
+    }
+
+    public function epargne()
+    {
+        if (!$this->session->get('isLoggedIn') || $this->session->get('role_id') != 2) {
+            return redirect()->to('/login');
+        }
+
+        $userId = $this->session->get('user_id');
+        $clientModel = new ClientModel();
+        $client = $clientModel->findByUserId($userId);
+
+        if (!$client) {
+            return redirect()->to('/login');
+        }
+
+        $epargneModel = new EpargneModel();
+        $epargne = $epargneModel->where('id_client', $client->id)->first();
+
+        $pourcentage = $epargne ? (float) $epargne->pourcentage : 0;
+        $montantTotal = $epargne ? (float) $epargne->montant_total : 0;
+
+        if ($this->request->getMethod() === 'post') {
+            $pourcentagePost = $this->request->getPost('pourcentage');
+
+            if ($pourcentagePost === null || !is_numeric($pourcentagePost) || $pourcentagePost < 0 || $pourcentagePost > 100) {
+                return redirect()->back()->with('error', 'Pourcentage invalide. Il doit être entre 0 et 100.');
+            }
+
+            $pourcentage = (float) $pourcentagePost;
+
+            if ($epargne) {
+                $epargneModel->update($epargne->id, [
+                    'pourcentage' => $pourcentage,
+                    'date_modification' => date('Y-m-d H:i:s'),
+                ]);
+            } else {
+                $epargneModel->insert([
+                    'id_client' => $client->id,
+                    'pourcentage' => $pourcentage,
+                    'montant_total' => 0,
+                    'date_modification' => date('Y-m-d H:i:s'),
+                ]);
+            }
+
+            return redirect()->to('/client/epargne')->with('success', 'Pourcentage d\'épargne enregistré avec succès.');
+        }
+
+        return view('client/epargne', [
+            'pourcentage' => $pourcentage,
+            'montant_total' => $montant_total ?? 0,
+        ]);
+    }
+
+    private function appliquerEpargne($clientId, $montantEntrant, $idOperation)
+    {
+        $epargneModel = new EpargneModel();
+        $epargne = $epargneModel->where('id_client', $clientId)->first();
+
+        if (!$epargne || (float) $epargne->pourcentage <= 0) {
+            return [
+                'montant_solde' => $montantEntrant,
+                'montant_epargne' => 0,
+                'pourcentage' => 0,
+            ];
+        }
+
+        $pourcentage = (float) $epargne->pourcentage;
+        $montantEpargne = $montantEntrant * ($pourcentage / 100);
+        $montantSolde = $montantEntrant - $montantEpargne;
+
+        $nouveauTotalEpargne = (float) $epargne->montant_total + $montantEpargne;
+        $epargneModel->update($epargne->id, [
+            'montant_total' => $nouveauTotalEpargne,
+            'date_modification' => date('Y-m-d H:i:s'),
+        ]);
+
+        db_connect()->table('operation_epargne')->insert([
+            'id_client' => $clientId,
+            'id_operation' => $idOperation,
+            'montant_operation' => $montantEntrant,
+            'pourcentage' => $pourcentage,
+            'montant_epargne' => $montantEpargne,
+            'montant_solde' => $montantSolde,
+            'date_operation' => date('Y-m-d H:i:s'),
+        ]);
+
+        return [
+            'montant_solde' => $montantSolde,
+            'montant_epargne' => $montantEpargne,
+            'pourcentage' => $pourcentage,
+        ];
     }
 }

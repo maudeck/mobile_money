@@ -15,6 +15,12 @@
         </svg>
         Solde
     </a>
+    <a href="<?= site_url('client/epargne') ?>" class="bottom-nav-item<?= url_is('client/epargne') ? ' active' : '' ?>">
+        <svg class="icon" viewBox="0 0 24 24">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+        </svg>
+        Epargne
+    </a>
     <?php foreach (get_operation_types() as $type):
         $slug = strtolower($type->libelle);
     ?>
