@@ -82,7 +82,7 @@
                         </svg>
                     </button>
                     <div class="topbar-title">
-                        <span>Administration</span>
+                        <span>Operateur</span>
                         <h2>Situation des comptes clients</h2>
                     </div>
                 </div>
@@ -107,6 +107,30 @@
                         <span><?= session()->get('error') ?></span>
                     </div>
                 <?php endif; ?>
+
+                <div class="row-header">
+                    <form method="get" action="<?= site_url('admin/clients') ?>" style="display:flex;gap:.7rem;flex-wrap:wrap;align-items:flex-end;flex:1;min-width:0;">
+                        <div class="field" style="flex:1 1 220px;margin-bottom:0;min-width:180px;">
+                            <label for="telephone" class="field-label">Telephone</label>
+                            <input type="text" class="control" id="telephone" name="telephone" placeholder="Rechercher par numero..." value="<?= esc($telephone ?? '') ?>">
+                        </div>
+                        <div class="field" style="flex:1 1 220px;margin-bottom:0;min-width:180px;">
+                            <label for="prefixe" class="field-label">Operateur</label>
+                            <select class="control" id="prefixe" name="prefixe">
+                                <option value="034" <?= ($prefixe ?? '') === '034' ? 'selected' : '' ?>>Telma (034)</option>
+                                <?php foreach ($operateurs ?? [] as $op): ?>
+                                    <?php if ($op->code_prefixe !== '034'): ?>
+                                        <option value="<?= esc($op->code_prefixe) ?>" <?= ($prefixe ?? '') === $op->code_prefixe ? 'selected' : '' ?>>
+                                            <?= esc($op->operateur_nom) ?> (<?= esc($op->code_prefixe) ?>)
+                                        </option>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Filtrer</button>
+                        <a href="<?= site_url('admin/clients') ?>" class="btn btn-secondary">Reinitialiser</a>
+                    </form>
+                </div>
 
                 <div class="card">
                     <div class="table-wrap">

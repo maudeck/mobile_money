@@ -83,15 +83,15 @@
                         </svg>
                     </button>
                     <div class="topbar-title">
-                        <span>Administration</span>
+                        <span>Operateur</span>
                         <h2>Tableau de bord</h2>
                     </div>
                 </div>
-                <span class="badge badge-navy">Administrateur</span>
+                <span class="badge badge-navy">Operateur</span>
             </header>
 
             <main class="main-content">
-                <p style="max-width:640px;">Bienvenue sur votre espace d'administration. Gerez les operateurs, les types d'operations et consultez les statistiques du reseau.</p>
+                <p style="max-width:640px;">Bienvenue sur votre espace d'Operateur. Gerez les operateurs, les types d'operations et consultez les statistiques du reseau.</p>
 
                 <div class="stat-grid">
                     <a href="<?= site_url('operateur') ?>" class="stat-card">
