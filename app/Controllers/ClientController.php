@@ -41,7 +41,37 @@ class ClientController extends BaseController
 
         $solde = $client ? $client->solde : 0;
 
-        return view('client/solde', ['solde' => $solde]);
+        $telephone = null;
+        $operateur = null;
+        $dateCreation = null;
+
+        if ($client) {
+            $user = db_connect()->table('user')->where('id', $client->id_user)->get()->getFirstRow();
+            $telephone = $user ? $user->telephone : null;
+
+            if ($client->id_prefixe) {
+                $prefixe = db_connect()->table('prefixe_operateur')->where('id', $client->id_prefixe)->get()->getFirstRow();
+                $operateur = $prefixe ? $prefixe->operateur_nom : null;
+            }
+
+            $dateCreation = $client->date_creation;
+        }
+
+        $db = \Config\Database::connect();
+        $query = $db->query("
+            SELECT COUNT(*) as total_operations
+            FROM operation
+            WHERE id_client_emetteur = ?
+        ", [$client->id ?? 0]);
+        $totalOperations = $query->getRow()->total_operations ?? 0;
+
+        return view('client/solde', [
+            'solde' => $solde,
+            'telephone' => $telephone,
+            'operateur' => $operateur,
+            'dateCreation' => $dateCreation,
+            'totalOperations' => $totalOperations
+        ]);
     }
 
     public function historique()
@@ -167,11 +197,7 @@ class ClientController extends BaseController
             $commissionModel = new CommissionOperateurModel();
             $commissionInfo = $commissionModel->findByOperateurs($emetteur->id_prefixe, $beneficiaireClient->id_prefixe);
 
-            if (!$commissionInfo) {
-                return $this->response->setJSON(['error' => 'Aucune commission configurée pour cette paire d\'opérateurs']);
-            }
-
-            $commission_pct = (float) $commissionInfo->commission_pct;
+            $commission_pct = $commissionInfo ? (float) $commissionInfo->commission_pct : 0;
 
             $trancheModel = new TrancheFraisModel();
             $tranche = $trancheModel->where('id_type_operation', $type->id)
@@ -350,6 +376,9 @@ class ClientController extends BaseController
         $beneficiaireUser = db_connect()->table('user')->where('telephone', $beneficiaireTel)->get()->getFirstRow();
         if (!$beneficiaireUser) {
             $prefixe = substr($beneficiaireTel, 0, 3);
+            if ($prefixe !== '034') {
+                return $this->response->setJSON(['error' => 'Accès refusé : seul l\'opérateur Telma (034) est autorisé pour le bénéficiaire.'])->setStatusCode(400);
+            }
 
             $operateurModel = new OperateurModel();
             $prefixeInfo = $operateurModel->where('code_prefixe', $prefixe)->first();
@@ -421,7 +450,7 @@ class ClientController extends BaseController
             db_connect()->table('operation')->insert([
                 'date_operation'     => date('Y-m-d H:i:s'),
                 'montant'            => (float) $montant,
-                'frais_applique'     => $commission,
+                'frais_applique'     => $fraisTransfert + $commission,
                 'id_client_emetteur' => $emetteur->id,
                 'id_client_destinataire' => $beneficiaireClient->id,
                 'id_type_operation'  => $type->id,
