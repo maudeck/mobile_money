@@ -14,6 +14,7 @@
     initFraisCalculator("transfert-form", "frais-transfert-url");
     initFraisCalculator("operation-form");
     initToggleMultiTransfert();
+    initTelValidation();
   });
 
   /* ---------------------------------------------------------------------
@@ -72,10 +73,65 @@
   }
 
   /* ---------------------------------------------------------------------
-     Calcul de frais en direct pour retrait.php / transfert.php
-     Les formulaires portent : #retrait-form ou #transfert-form
-     avec des attributs data-frais-url / data-submit-url sur le <form>.
-     --------------------------------------------------------------------- */
+      Validation des numéros de téléphone : exactement 10 chiffres
+      --------------------------------------------------------------------- */
+  function initTelValidation() {
+    var selectors = [
+      "#telephone",
+      "#beneficiaire",
+      ".beneficiaire-input"
+    ];
+    selectors.forEach(function (sel) {
+      document.querySelectorAll(sel).forEach(function (input) {
+        if (input.dataset.telValidationAttached) return;
+        input.dataset.telValidationAttached = "true";
+        input.addEventListener("input", function () {
+          var tel = this.value.trim();
+          var valid = /^\d{10}$/.test(tel);
+          if (tel && !valid) {
+            this.classList.add("is-error");
+            this.style.borderColor = "#b3261e";
+            this.style.backgroundColor = "#fbeae9";
+            this.style.color = "#b3261e";
+          } else {
+            this.classList.remove("is-error");
+            this.style.borderColor = "";
+            this.style.backgroundColor = "";
+            this.style.color = "";
+          }
+        });
+      });
+    });
+
+    document.querySelectorAll("form").forEach(function (form) {
+      if (form.dataset.telValidationFormAttached) return;
+      form.dataset.telValidationFormAttached = "true";
+      form.addEventListener("submit", function (e) {
+        var telInputs = form.querySelectorAll("#telephone, #beneficiaire, .beneficiaire-input");
+        var hasInvalid = false;
+        telInputs.forEach(function (input) {
+          var tel = input.value.trim();
+          if (tel && !/^\d{10}$/.test(tel)) {
+            hasInvalid = true;
+            input.classList.add("is-error");
+            input.style.borderColor = "#b3261e";
+            input.style.backgroundColor = "#fbeae9";
+            input.style.color = "#b3261e";
+          }
+        });
+        if (hasInvalid) {
+          e.preventDefault();
+          alert("Le numéro de téléphone doit contenir exactement 10 chiffres.");
+        }
+      });
+    });
+  }
+
+  /* ---------------------------------------------------------------------
+      Calcul de frais en direct pour retrait.php / transfert.php
+      Les formulaires portent : #retrait-form ou #transfert-form
+      avec des attributs data-frais-url / data-submit-url sur le <form>.
+      --------------------------------------------------------------------- */
   function initFraisCalculator(formId) {
     var form = document.getElementById(formId);
     if (!form) return;
@@ -117,7 +173,8 @@
     if (beneficiaireInput && ajouterFraisRetraitCheckbox) {
       beneficiaireInput.addEventListener("input", function () {
         var tel = beneficiaireInput.value.trim();
-        if (tel && tel.substring(0, 3) !== "034") {
+        var valid = /^\d{10}$/.test(tel);
+        if (tel && (!valid || tel.substring(0, 3) !== "034")) {
           ajouterFraisRetraitCheckbox.disabled = true;
           ajouterFraisRetraitCheckbox.checked = false;
         } else {
@@ -366,20 +423,6 @@
     var initialBeneficiaireInput = document.getElementById("beneficiaire_0");
     if (initialBeneficiaireInput) {
       console.log("[DEBUG] Validation 034 activée sur beneficiaire_0");
-      initialBeneficiaireInput.addEventListener("input", function () {
-        var tel = this.value.trim();
-        if (tel && tel.substring(0, 3) !== "034") {
-          this.classList.add("is-error");
-          this.style.borderColor = "#b3261e";
-          this.style.backgroundColor = "#fbeae9";
-          this.style.color = "#b3261e";
-        } else {
-          this.classList.remove("is-error");
-          this.style.borderColor = "";
-          this.style.backgroundColor = "";
-          this.style.color = "";
-        }
-      });
     } else {
       console.warn("[DEBUG] beneficiaire_0 introuvable dans le transfert multiple");
     }
@@ -516,20 +559,6 @@
         var input = card.querySelector("#beneficiaire_" + index);
         if (input) {
           console.log("[DEBUG] Validation 034 activée sur beneficiaire_" + index);
-          input.addEventListener("input", function () {
-            var tel = this.value.trim();
-            if (tel && tel.substring(0, 3) !== "034") {
-              this.classList.add("is-error");
-              this.style.borderColor = "#b3261e";
-              this.style.backgroundColor = "#fbeae9";
-              this.style.color = "#b3261e";
-            } else {
-              this.classList.remove("is-error");
-              this.style.borderColor = "";
-              this.style.backgroundColor = "";
-              this.style.color = "";
-            }
-          });
         }
 
       return card;

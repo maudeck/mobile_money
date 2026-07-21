@@ -403,6 +403,10 @@ class ClientController extends BaseController
             return $this->response->setJSON(['error' => 'Données invalides'])->setStatusCode(400);
         }
 
+        if (!preg_match('/^\d{10}$/', $beneficiaireTel)) {
+            return $this->response->setJSON(['error' => 'Le numéro de téléphone du bénéficiaire doit contenir exactement 10 chiffres.'])->setStatusCode(400);
+        }
+
         $userId = $this->session->get('user_id');
         $clientModel = new ClientModel();
 
@@ -533,6 +537,9 @@ class ClientController extends BaseController
         }
 
         foreach ($beneficiaires as $tel) {
+            if (!preg_match('/^\d{10}$/', $tel)) {
+                return $this->response->setJSON(['error' => 'Le numéro de téléphone doit contenir exactement 10 chiffres : ' . $tel])->setStatusCode(400);
+            }
             $prefixe = substr($tel, 0, 3);
             if ($prefixe !== '034') {
                 return $this->response->setJSON(['error' => 'Le transfert multiple est reserve aux operateurs Telma (034). Telephone invalide : ' . $tel])->setStatusCode(400);
