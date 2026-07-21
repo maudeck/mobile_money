@@ -556,12 +556,52 @@
           '</div>' +
         '</div>';
 
-        var input = card.querySelector("#beneficiaire_" + index);
-        if (input) {
-          console.log("[DEBUG] Validation 034 activée sur beneficiaire_" + index);
-        }
+      var input = card.querySelector("#beneficiaire_" + index);
+      if (input) {
+        console.log("[DEBUG] Validation 034 activée sur beneficiaire_" + index);
+      }
 
       return card;
+    }
+
+    function renderChips() {
+      var cards = container.querySelectorAll(".transfert-card");
+      var grid = document.getElementById("beneficiaire-grid");
+      if (!grid) return;
+      grid.innerHTML = "";
+
+      cards.forEach(function (card) {
+        var idx = card.getAttribute("data-index");
+        var input = card.querySelector("#beneficiaire_" + idx);
+        var tel = input ? input.value.trim() : "";
+        if (!tel) return;
+
+        var chip = document.createElement("div");
+        chip.className = "beneficiaire-chip";
+        chip.innerHTML =
+          '<span>' + escapeHtml(tel) + '</span>' +
+          '<button type="button" class="chip-remove" data-index="' + idx + '" title="Supprimer">' +
+            '<svg class="icon icon-sm" viewBox="0 0 24 24">' +
+              '<line x1="18" y1="6" x2="6" y2="18" />' +
+              '<line x1="6" y1="6" x2="18" y2="18" />' +
+            '</svg>' +
+          '</button>';
+        grid.appendChild(chip);
+      });
+
+      var addBtn = document.getElementById("add-transfert-btn");
+      if (addBtn) {
+        grid.appendChild(addBtn);
+      }
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
     }
 
     function updateRemoveButtons() {

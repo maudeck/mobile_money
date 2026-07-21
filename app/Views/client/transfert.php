@@ -85,30 +85,8 @@ $titre = 'Transfert — Mobile Money';
 
             <div class="field">
                 <label class="field-label">Beneficiaires (Telma 034 uniquement)</label>
-                <div id="transfert-container" data-clients="<?= htmlspecialchars(json_encode(array_column($clients, 'telephone')), ENT_QUOTES, 'UTF-8') ?>" data-frais-url="<?= site_url('client/frais/transfert') ?>" data-submit-url="<?= site_url('client/transfert-multiple') ?>" data-csrf-name="<?= csrf_token() ?>" data-csrf-hash="<?= csrf_hash() ?>">
-                    <div class="card transfert-card" data-index="0">
-                        <div class="card-body">
-                            <button type="button" class="btn btn-danger btn-sm remove-transfert" style="float: right;" title="Supprimer ce beneficiaire">
-                                <svg class="icon icon-sm" viewBox="0 0 24 24">
-                                    <polyline points="3 6 5 6 21 6" />
-                                    <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                                    <path d="M10 11v6" />
-                                    <path d="M14 11v6" />
-                                </svg>
-                            </button>
-                            <div class="field">
-                                <label for="beneficiaire_0" class="field-label">Beneficiaire (Numero Telma 034)</label>
-                                <input type="text" class="control beneficiaire-input" id="beneficiaire_0" placeholder="034 00 000 00" required>
-                            </div>
-                            <div class="field">
-                                <label class="field-label">Montant par beneficiaire</label>
-                                <div class="control-amount">
-                                    <input type="text" class="control montant-part" id="montant-part_0" readonly>
-                                    <span class="suffix">Ar</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="beneficiaire-grid" id="transfert-container" data-clients="<?= htmlspecialchars(json_encode(array_column($clients, 'telephone')), ENT_QUOTES, 'UTF-8') ?>" data-frais-url="<?= site_url('client/frais/transfert') ?>" data-submit-url="<?= site_url('client/transfert-multiple') ?>" data-csrf-name="<?= csrf_token() ?>" data-csrf-hash="<?= csrf_hash() ?>">
+                    <input type="hidden" id="beneficiaires-hidden" name="beneficiaires" value="">
                 </div>
             </div>
 
