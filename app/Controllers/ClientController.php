@@ -7,6 +7,7 @@ use App\Models\CommissionOperateurModel;
 use App\Models\OperateurModel;
 use App\Models\TypeOperationModel;
 use App\Models\TrancheFraisModel;
+use App\Models\TrancheFraisOptionModel;
 use App\Models\UserModel;
 use App\Models\VueHistoriqueModel;
 use CodeIgniter\Controller;
@@ -122,6 +123,10 @@ class ClientController extends BaseController
 
         $frais = 0;
         $commission_pct = 0;
+        $commission_valeur = 0;
+        $fraisOption = 0;
+        $fraisRetrait = 0;
+        $ajouterFraisRetrait = $this->request->getPost('ajouter_frais_retrait');
 
         if (strtolower($type->libelle) === 'transfert') {
             $beneficiaireTel = $this->request->getPost('beneficiaire');
@@ -171,7 +176,10 @@ class ClientController extends BaseController
                 return $this->response->setJSON(['error' => 'Aucune commission configurée pour cette paire d\'opérateurs']);
             }
 
-            $commission_pct = (float) $commissionInfo->commission_pct;
+            $commission_valeur = 0;
+        if ($commissionInfo && (float) $commissionInfo->commission_pct > 0) {
+            $commission_valeur = (float) $montant * ((float) $commissionInfo->commission_pct / 100);
+        }
 
             $trancheModel = new TrancheFraisModel();
             $tranche = $trancheModel->where('id_type_operation', $type->id)
@@ -182,7 +190,33 @@ class ClientController extends BaseController
             if ($tranche) {
                 $frais = (float) $tranche->frais;
             }
+
+            $fraisOption = 0;
+
+            if ($ajouterFraisRetrait) {
+                $trancheOptionModel = new TrancheFraisOptionModel();
+                $trancheOption = $trancheOptionModel->where('id_type_operation', $type->id)
+                    ->where('montant_min <=', $montant)
+                    ->where('montant_max >=', $montant)
+                    ->first();
+
+                if ($trancheOption) {
+                    $fraisOption = (float) $trancheOption->frais_option;
+                }
+            }
         } else {
+            $fraisOption = 0;
+
+            $trancheOptionModel = new TrancheFraisOptionModel();
+            $trancheOption = $trancheOptionModel->where('id_type_operation', $type->id)
+                ->where('montant_min <=', $montant)
+                ->where('montant_max >=', $montant)
+                ->first();
+
+            if ($trancheOption) {
+                $fraisOption = (float) $trancheOption->frais_option;
+            }
+
             $trancheModel = new TrancheFraisModel();
             $tranche = $trancheModel->where('id_type_operation', $type->id)
                 ->where('montant_min <=', $montant)
@@ -195,7 +229,7 @@ class ClientController extends BaseController
                     ->first();
 
                 if (!$minTranche) {
-                    return $this->response->setJSON(['frais' => 0, 'commission_pct' => 0]);
+                    return $this->response->setJSON(['frais' => 0, 'frais_option' => 0]);
                 }
 
                 if ((float) $montant < (float) $minTranche->montant_min) {
@@ -207,11 +241,33 @@ class ClientController extends BaseController
 
             $frais = $tranche->frais;
             $commission_pct = 0;
+
+            $fraisRetrait = 0;
+
+            if ($ajouterFraisRetrait) {
+                $typeRetraitModel = new TypeOperationModel();
+                $typeRetrait = $typeRetraitModel->where('LOWER(libelle)', 'retrait')->first();
+
+                if ($typeRetrait) {
+                    $trancheRetraitModel = new TrancheFraisModel();
+                    $trancheRetrait = $trancheRetraitModel->where('id_type_operation', $typeRetrait->id)
+                        ->where('montant_min <=', $montant)
+                        ->where('montant_max >=', $montant)
+                        ->first();
+
+                    if ($trancheRetrait) {
+                        $fraisRetrait = (float) $trancheRetrait->frais;
+                    }
+                }
+            }
         }
 
         return $this->response->setJSON([
             'frais' => $frais,
-            'commission_pct' => $commission_pct
+            'commission_pct' => $commission_pct,
+            'commission_valeur' => $commission_valeur,
+            'frais_option' => isset($fraisOption) ? $fraisOption : 0,
+            'frais_retrait' => $fraisRetrait
         ]);
     }
 
@@ -223,6 +279,7 @@ class ClientController extends BaseController
 
         $montant = $this->request->getPost('montant');
         $fraisApp = $this->request->getPost('frais_applique');
+        $fraisOptionApp = $this->request->getPost('frais_option_applique');
 
         if (!$montant || !is_numeric($montant) || $fraisApp === null || !is_numeric($fraisApp)) {
             return $this->response->setStatusCode(400)->setJSON(['error' => 'Données invalides']);
@@ -253,6 +310,7 @@ class ClientController extends BaseController
             'date_operation'     => date('Y-m-d H:i:s'),
             'montant'            => (float) $montant,
             'frais_applique'     => (float) $fraisApp,
+            'frais_option_applique' => null,
             'id_client_emetteur' => $client->id,
             'id_client_destinataire' => null,
             'id_type_operation'  => $type->id,
@@ -275,6 +333,7 @@ class ClientController extends BaseController
 
         $montant = $this->request->getPost('montant');
         $fraisApp = $this->request->getPost('frais_applique');
+        $fraisOptionApp = $this->request->getPost('frais_option_applique');
 
         if (!$montant || !is_numeric($montant) || $fraisApp === null || !is_numeric($fraisApp)) {
             return $this->response->setStatusCode(400)->setJSON(['error' => 'Données invalides']);
@@ -311,6 +370,7 @@ class ClientController extends BaseController
             'date_operation'     => date('Y-m-d H:i:s'),
             'montant'            => (float) $montant,
             'frais_applique'     => (float) $fraisApp,
+            'frais_option_applique' => $fraisOptionApp !== null && is_numeric($fraisOptionApp) ? (float) $fraisOptionApp : null,
             'id_client_emetteur' => $client->id,
             'id_client_destinataire' => null,
             'id_type_operation'  => $type->id,
@@ -333,9 +393,18 @@ class ClientController extends BaseController
 
         $montant = $this->request->getPost('montant');
         $beneficiaireTel = $this->request->getPost('beneficiaire');
+        $fraisApp = $this->request->getPost('frais_applique');
+        $fraisOptionApp = $this->request->getPost('frais_option_applique');
 
-        if (!$montant || !is_numeric($montant) || empty($beneficiaireTel)) {
+        log_message('info', 'TRANSFERT RECU: montant=' . $montant . ' beneficiaire=' . $beneficiaireTel . ' frais_applique=' . $fraisApp . ' frais_option_applique=' . $fraisOptionApp);
+        
+
+        if (!$montant || !is_numeric($montant) || empty($beneficiaireTel) || $fraisApp === null || !is_numeric($fraisApp)) {
             return $this->response->setJSON(['error' => 'Données invalides'])->setStatusCode(400);
+        }
+
+        if (!preg_match('/^\d{10}$/', $beneficiaireTel)) {
+            return $this->response->setJSON(['error' => 'Le numéro de téléphone du bénéficiaire doit contenir exactement 10 chiffres.'])->setStatusCode(400);
         }
 
         $userId = $this->session->get('user_id');
@@ -361,6 +430,10 @@ class ClientController extends BaseController
             $userModel = new UserModel();
             $userModel->createClient($beneficiaireTel);
             $beneficiaireUser = db_connect()->table('user')->where('telephone', $beneficiaireTel)->get()->getFirstRow();
+        }
+
+        if ((int) $emetteur->id_user === (int) $beneficiaireUser->id) {
+            return $this->response->setJSON(['error' => 'Vous ne pouvez pas transférer de l\'argent à votre propre numéro de téléphone.'])->setStatusCode(400);
         }
 
         $beneficiaireClient = $clientModel->findByUserId($beneficiaireUser->id);
@@ -401,7 +474,7 @@ class ClientController extends BaseController
 
         $fraisTransfert = $tranche ? (float) $tranche->frais : 0;
 
-        $totalDebit = (float) $montant + $fraisTransfert + $commission;
+        $totalDebit = (float) $montant + $fraisTransfert + $commission + (float) ($fraisOptionApp ?? 0);
 
         if ($emetteur->solde < $totalDebit) {
             return $this->response->setJSON(['error' => 'Solde insuffisant'])->setStatusCode(400);
@@ -415,17 +488,20 @@ class ClientController extends BaseController
             ]);
 
             db_connect()->table('client')->where('id', $beneficiaireClient->id)->update([
-                'solde' => $beneficiaireClient->solde + (float) $montant,
+                'solde' => $beneficiaireClient->solde + (float) $montant + (float) ($fraisOptionApp ?? 0),
             ]);
 
             db_connect()->table('operation')->insert([
                 'date_operation'     => date('Y-m-d H:i:s'),
                 'montant'            => (float) $montant,
-                'frais_applique'     => $commission,
+                'frais_applique'     => $fraisTransfert + $commission,
+                'frais_option_applique' => $fraisOptionApp !== null && is_numeric($fraisOptionApp) ? (float) $fraisOptionApp : null,
                 'id_client_emetteur' => $emetteur->id,
                 'id_client_destinataire' => $beneficiaireClient->id,
                 'id_type_operation'  => $type->id,
             ]);
+
+            log_message('info', 'TRANSFERT DEBUG: montant=' . $montant . ' fraisTransfert=' . $fraisTransfert . ' commission=' . $commission . ' fraisOptionApp=' . $fraisOptionApp . ' totalDebit=' . $totalDebit . ' insert_frais_applique=' . ($fraisTransfert + $commission));
 
             db_connect()->transComplete();
 
@@ -449,6 +525,8 @@ class ClientController extends BaseController
         $beneficiaires = $this->request->getPost('beneficiaires');
         $montantTotal = $this->request->getPost('montant_total');
         $fraisApp = $this->request->getPost('frais_applique');
+        $fraisOptionApp = $this->request->getPost('frais_option_applique');
+        
 
         if (empty($beneficiaires) || !$montantTotal || !is_numeric($montantTotal) || $fraisApp === null || !is_numeric($fraisApp)) {
             return $this->response->setJSON(['error' => 'Données invalides'])->setStatusCode(400);
@@ -463,6 +541,9 @@ class ClientController extends BaseController
         }
 
         foreach ($beneficiaires as $tel) {
+            if (!preg_match('/^\d{10}$/', $tel)) {
+                return $this->response->setJSON(['error' => 'Le numéro de téléphone doit contenir exactement 10 chiffres : ' . $tel])->setStatusCode(400);
+            }
             $prefixe = substr($tel, 0, 3);
             if ($prefixe !== '034') {
                 return $this->response->setJSON(['error' => 'Le transfert multiple est reserve aux operateurs Telma (034). Telephone invalide : ' . $tel])->setStatusCode(400);
@@ -478,9 +559,10 @@ class ClientController extends BaseController
 
         $montantTotal = (float) $montantTotal;
         $fraisApp = (float) $fraisApp;
-        $totalDebit = $montantTotal + $fraisApp;
+        $fraisOptionApp = (float) ($fraisOptionApp ?? 0);
         $nombreBeneficiaires = count($beneficiaires);
         $montantParBeneficiaire = $montantTotal / $nombreBeneficiaires;
+        $totalDebit = $montantTotal + $fraisApp + ($fraisOptionApp * $nombreBeneficiaires);
 
         if ($emetteur->solde < $totalDebit) {
             return $this->response->setJSON(['error' => 'Solde insuffisant. Total requis : ' . $totalDebit . ' Ar mais votre solde est de ' . $emetteur->solde . ' Ar.'])->setStatusCode(400);
@@ -530,13 +612,15 @@ class ClientController extends BaseController
                 }
 
                 db_connect()->table('client')->where('id', $beneficiaireClient->id)->update([
-                    'solde' => $beneficiaireClient->solde + $montantParBeneficiaire,
+                    'solde' => $beneficiaireClient->solde + $montantParBeneficiaire + $fraisOptionApp,
                 ]);
 
                 db_connect()->table('operation')->insert([
                     'date_operation'     => date('Y-m-d H:i:s'),
                     'montant'            => $montantParBeneficiaire,
                     'frais_applique'     => $fraisApp,
+                    'frais_option_applique' => $fraisOptionApp !== null && is_numeric($fraisOptionApp) ? (float) $fraisOptionApp : null,
+                    
                     'id_client_emetteur' => $emetteur->id,
                     'id_client_destinataire' => $beneficiaireClient->id,
                     'id_type_operation'  => $type->id,

@@ -82,7 +82,7 @@
                         </svg>
                     </button>
                     <div class="topbar-title">
-                        <span>Administration</span>
+                        <span>Operateur</span>
                         <h2>Gestion des operateurs</h2>
                     </div>
                 </div>

@@ -1,6 +1,6 @@
 /* =========================================================================
    MOBILE MONEY — script.js
-   Comportements partages : sidebar admin, alertes, confirmation de
+   Comportements partagés : sidebar admin, alertes, confirmation de
    suppression, calcul de frais en direct (retrait / transfert).
    ========================================================================= */
 (function () {
@@ -14,6 +14,7 @@
     initFraisCalculator("transfert-form", "frais-transfert-url");
     initFraisCalculator("operation-form");
     initToggleMultiTransfert();
+    initTelValidation();
   });
 
   /* ---------------------------------------------------------------------
@@ -72,10 +73,65 @@
   }
 
   /* ---------------------------------------------------------------------
-     Calcul de frais en direct pour retrait.php / transfert.php
-     Les formulaires portent : #retrait-form ou #transfert-form
-     avec des attributs data-frais-url / data-submit-url sur le <form>.
-     --------------------------------------------------------------------- */
+      Validation des numéros de téléphone : exactement 10 chiffres
+      --------------------------------------------------------------------- */
+  function initTelValidation() {
+    var selectors = [
+      "#telephone",
+      "#beneficiaire",
+      ".beneficiaire-input"
+    ];
+    selectors.forEach(function (sel) {
+      document.querySelectorAll(sel).forEach(function (input) {
+        if (input.dataset.telValidationAttached) return;
+        input.dataset.telValidationAttached = "true";
+        input.addEventListener("input", function () {
+          var tel = this.value.trim();
+          var valid = /^\d{10}$/.test(tel);
+          if (tel && !valid) {
+            this.classList.add("is-error");
+            this.style.borderColor = "#b3261e";
+            this.style.backgroundColor = "#fbeae9";
+            this.style.color = "#b3261e";
+          } else {
+            this.classList.remove("is-error");
+            this.style.borderColor = "";
+            this.style.backgroundColor = "";
+            this.style.color = "";
+          }
+        });
+      });
+    });
+
+    document.querySelectorAll("form").forEach(function (form) {
+      if (form.dataset.telValidationFormAttached) return;
+      form.dataset.telValidationFormAttached = "true";
+      form.addEventListener("submit", function (e) {
+        var telInputs = form.querySelectorAll("#telephone, #beneficiaire, .beneficiaire-input");
+        var hasInvalid = false;
+        telInputs.forEach(function (input) {
+          var tel = input.value.trim();
+          if (tel && !/^\d{10}$/.test(tel)) {
+            hasInvalid = true;
+            input.classList.add("is-error");
+            input.style.borderColor = "#b3261e";
+            input.style.backgroundColor = "#fbeae9";
+            input.style.color = "#b3261e";
+          }
+        });
+        if (hasInvalid) {
+          e.preventDefault();
+          alert("Le numéro de téléphone doit contenir exactement 10 chiffres.");
+        }
+      });
+    });
+  }
+
+  /* ---------------------------------------------------------------------
+      Calcul de frais en direct pour retrait.php / transfert.php
+      Les formulaires portent : #retrait-form ou #transfert-form
+      avec des attributs data-frais-url / data-submit-url sur le <form>.
+      --------------------------------------------------------------------- */
   function initFraisCalculator(formId) {
     var form = document.getElementById(formId);
     if (!form) return;
@@ -84,11 +140,14 @@
     var feeDisplay = form.querySelector("#frais-display");
     var submitBtn = form.querySelector("button[type=submit]");
     var beneficiaireInput = form.querySelector("#beneficiaire");
+    var ajouterFraisRetraitCheckbox = form.querySelector("#ajouter-frais-retrait");
     var fraisUrl = form.getAttribute("data-frais-url");
     var submitUrl = form.getAttribute("data-submit-url");
     var csrfName = form.getAttribute("data-csrf-name");
     var csrfHash = form.getAttribute("data-csrf-hash");
     var currentFrais = null;
+    var currentFraisOption = 0;
+    var currentFraisRetrait = 0;
 
     if (!montantInput || !feeDisplay || !fraisUrl) return;
 
@@ -108,6 +167,39 @@
         currentFrais = null;
         return;
       }
+      calculerFrais();
+    });
+
+    if (beneficiaireInput && ajouterFraisRetraitCheckbox) {
+      beneficiaireInput.addEventListener("input", function () {
+        var tel = beneficiaireInput.value.trim();
+        var valid = /^\d{10}$/.test(tel);
+        if (tel && (!valid || tel.substring(0, 3) !== "034")) {
+          ajouterFraisRetraitCheckbox.disabled = true;
+          ajouterFraisRetraitCheckbox.checked = false;
+        } else {
+          ajouterFraisRetraitCheckbox.disabled = false;
+        }
+      });
+    }
+
+    if (ajouterFraisRetraitCheckbox) {
+      ajouterFraisRetraitCheckbox.addEventListener("change", function () {
+        if (montantInput.value) {
+          calculerFrais();
+        }
+      });
+    }
+
+    function calculerFrais() {
+      var montant = montantInput.value;
+      if (!montant) {
+        setFee("Frais : —", false);
+        currentFrais = null;
+        currentFraisOption = 0;
+        currentFraisRetrait = 0;
+        return;
+      }
 
       var body =
         "montant=" +
@@ -115,6 +207,8 @@
         (beneficiaireInput && getBeneficiaire()
           ? "&beneficiaire=" + encodeURIComponent(getBeneficiaire())
           : "") +
+        "&ajouter_frais_retrait=" +
+        (ajouterFraisRetraitCheckbox && ajouterFraisRetraitCheckbox.checked ? "1" : "0") +
         "&" +
         csrfName +
         "=" +
@@ -129,11 +223,7 @@
         body: body,
       })
         .then(function (r) {
-          console.log("URL appelée:", fraisUrl);
-          console.log("Statut HTTP:", r.status, r.statusText);
-          console.log("Headers:", r.headers.get("content-type"));
           return r.text().then(function (text) {
-            console.log("Réponse brute:", JSON.stringify(text));
             try {
               var data = JSON.parse(text);
               if (!r.ok) {
@@ -150,20 +240,41 @@
           if (data && data.error) {
             setFee(data.error, true);
             currentFrais = null;
+            currentFraisOption = 0;
+            currentFraisRetrait = 0;
           } else if (data && typeof data.frais !== 'undefined') {
-            setFee("Frais : " + data.frais + " Ar", false);
+            var feeText = "Frais : " + data.frais + " Ar";
+            if (data.commission_valeur && data.commission_valeur > 0) {
+              feeText += " + " + data.commission_valeur + " Ar (commission)";
+            }
+            if (data.frais_option && data.frais_option > 0) {
+              feeText += " + " + data.frais_option + " Ar (frais de retrait)";
+              currentFraisOption = data.frais_option;
+            } else {
+              currentFraisOption = 0;
+            }
+            if (data.frais_retrait && data.frais_retrait > 0) {
+              currentFraisRetrait = data.frais_retrait;
+            } else {
+              currentFraisRetrait = 0;
+            }
+            setFee(feeText, false);
             currentFrais = data.frais;
           } else {
             setFee("Erreur : réponse inattendue du serveur", true);
             currentFrais = null;
+            currentFraisOption = 0;
+            currentFraisRetrait = 0;
           }
         })
         .catch(function (err) {
           console.error("Erreur calcul frais:", err);
           setFee("Erreur: " + err.message, true);
           currentFrais = null;
+          currentFraisOption = 0;
+          currentFraisRetrait = 0;
         });
-    });
+    }
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -188,11 +299,16 @@
         encodeURIComponent(montant) +
         "&frais_applique=" +
         encodeURIComponent(currentFrais) +
-        "&beneficiaire=" + encodeURIComponent(beneficiaire) +
+        "&frais_option_applique=" +
+        encodeURIComponent(currentFraisOption) +
         "&" +
         csrfName +
         "=" +
         csrfHash;
+
+      if (beneficiaireInput && beneficiaire) {
+        body += "&beneficiaire=" + encodeURIComponent(beneficiaire);
+      }
 
       if (submitBtn) submitBtn.setAttribute("disabled", "disabled");
 
@@ -286,6 +402,7 @@
     var errorsDiv = document.getElementById("transfert-errors");
     var montantTotalInput = document.getElementById("montant-total");
     var fraisTotalDisplay = document.getElementById("frais-total-display");
+    var ajouterFraisRetraitCheckbox = document.getElementById("ajouter-frais-retrait-multiple");
     if (!container || !addBtn || !submitAllBtn || !montantTotalInput || !fraisTotalDisplay) return;
 
     var clientsData = container.getAttribute("data-clients");
@@ -300,6 +417,15 @@
     var csrfName = container.getAttribute("data-csrf-name") || "";
     var csrfHash = container.getAttribute("data-csrf-hash") || "";
     var currentFraisTotal = 0;
+    var currentFraisOptionTotal = 0;
+    var currentFraisRetraitTotal = 0;
+
+    var initialBeneficiaireInput = document.getElementById("beneficiaire_0");
+    if (initialBeneficiaireInput) {
+      console.log("[DEBUG] Validation 034 activée sur beneficiaire_0");
+    } else {
+      console.warn("[DEBUG] beneficiaire_0 introuvable dans le transfert multiple");
+    }
 
     function updateMontantParts() {
       var cards = container.querySelectorAll(".transfert-card");
@@ -326,13 +452,36 @@
         currentFraisTotal = 0;
         return;
       }
+
+      var premierBeneficiaire = "";
+      var cardsTmp = container.querySelectorAll(".transfert-card");
+      for (var i = 0; i < cardsTmp.length; i++) {
+        var idxTmp = cardsTmp[i].getAttribute("data-index");
+        var inputTmp = cardsTmp[i].querySelector("#beneficiaire_" + idxTmp);
+        if (inputTmp && inputTmp.value.trim()) {
+          premierBeneficiaire = inputTmp.value.trim();
+          break;
+        }
+      }
+
+      var body =
+        "montant=" +
+        encodeURIComponent(montantTotal) +
+        (premierBeneficiaire ? "&beneficiaire=" + encodeURIComponent(premierBeneficiaire) : "") +
+        "&ajouter_frais_retrait=" +
+        (ajouterFraisRetraitCheckbox && ajouterFraisRetraitCheckbox.checked ? "1" : "0") +
+        "&" +
+        csrfName +
+        "=" +
+        csrfHash;
+
       fetch(fraisUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
           "X-Requested-With": "XMLHttpRequest",
         },
-        body: "montant=" + encodeURIComponent(montantTotal) + "&" + csrfName + "=" + csrfHash,
+        body: body,
       })
         .then(function (r) { return r.json(); })
         .then(function (data) {
@@ -340,8 +489,25 @@
             fraisTotalDisplay.innerHTML = '<svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><line x1="12" y1="8" x2="12" y2="13" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg> ' + data.error;
             fraisTotalDisplay.classList.add("is-error");
             currentFraisTotal = 0;
+            currentFraisOptionTotal = 0;
+            currentFraisRetraitTotal = 0;
           } else {
-            fraisTotalDisplay.innerHTML = '<svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><line x1="12" y1="8" x2="12" y2="13" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg> Frais : ' + data.frais + ' Ar';
+            var feeText = 'Frais : ' + data.frais + ' Ar';
+            if (data.commission_valeur && data.commission_valeur > 0) {
+              feeText += ' + ' + data.commission_valeur + ' Ar (commission)';
+            }
+            if (data.frais_option && data.frais_option > 0) {
+              feeText += ' + ' + data.frais_option + ' Ar (frais de retrait)';
+              currentFraisOptionTotal = data.frais_option;
+            } else {
+              currentFraisOptionTotal = 0;
+            }
+            if (data.frais_retrait && data.frais_retrait > 0) {
+              currentFraisRetraitTotal = data.frais_retrait;
+            } else {
+              currentFraisRetraitTotal = 0;
+            }
+            fraisTotalDisplay.innerHTML = '<svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><line x1="12" y1="8" x2="12" y2="13" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg> ' + feeText;
             fraisTotalDisplay.classList.remove("is-error");
             currentFraisTotal = data.frais;
           }
@@ -350,7 +516,17 @@
           fraisTotalDisplay.innerHTML = '<svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><line x1="12" y1="8" x2="12" y2="13" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg> Erreur lors du calcul des frais';
           fraisTotalDisplay.classList.add("is-error");
           currentFraisTotal = 0;
+          currentFraisOptionTotal = 0;
+          currentFraisRetraitTotal = 0;
         });
+    }
+
+    if (ajouterFraisRetraitCheckbox) {
+      ajouterFraisRetraitCheckbox.addEventListener("change", function () {
+        if (montantTotalInput.value) {
+          updateFraisTotal();
+        }
+      });
     }
 
     function buildCard(index) {
@@ -380,19 +556,10 @@
           '</div>' +
         '</div>';
 
-      var input = card.querySelector("#beneficiaire_" + index);
-      if (input) {
-        input.addEventListener("input", function () {
-          var tel = this.value.trim();
-          if (tel && tel.substring(0, 3) !== "034") {
-            this.classList.add("is-error");
-            this.style.borderColor = "var(--danger)";
-          } else {
-            this.classList.remove("is-error");
-            this.style.borderColor = "";
-          }
-        });
-      }
+        var input = card.querySelector("#beneficiaire_" + index);
+        if (input) {
+          console.log("[DEBUG] Validation 034 activée sur beneficiaire_" + index);
+        }
 
       return card;
     }
@@ -475,6 +642,7 @@
         "beneficiaires[]=" + beneficiaires.map(encodeURIComponent).join("&beneficiaires[]=") +
         "&montant_total=" + encodeURIComponent(montantTotal) +
         "&frais_applique=" + encodeURIComponent(currentFraisTotal) +
+        "&frais_option_applique=" + encodeURIComponent(currentFraisOptionTotal) +
         "&" + csrfName + "=" + encodeURIComponent(csrfHash);
 
       submitAllBtn.setAttribute("disabled", "disabled");
@@ -504,6 +672,8 @@
             fraisTotalDisplay.innerHTML = '<svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><line x1="12" y1="8" x2="12" y2="13" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg> Frais : —';
             fraisTotalDisplay.classList.remove("is-error");
             currentFraisTotal = 0;
+            currentFraisOptionTotal = 0;
+            currentFraisRetraitTotal = 0;
             updateMontantParts();
             errorsDiv.innerHTML = "";
           } else {

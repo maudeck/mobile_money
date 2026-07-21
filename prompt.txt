@@ -60,10 +60,10 @@ dashboard.php :"<!DOCTYPE html>
             <div class="col-12">
                 <div class="page-header">
                     <h2>Tableau de Bord</h2>
-                    <span class="badge bg-success fs-6">Administrateur</span>
+                    <span class="badge bg-success fs-6">Operateur</span>
                 </div>
                 
-                <p class="text-muted mb-4">Bienvenue sur votre espace d'administration. Gérez les opérateurs, les types d'opérations et consultez les statistiques.</p>
+                <p class="text-muted mb-4">Bienvenue sur votre espace d'Operateur. Gérez les opérateurs, les types d'opérations et consultez les statistiques.</p>
 
                 <div class="dashboard-grid">
                     <a href="<?= site_url('operateur') ?>" class="dashboard-card primary">
