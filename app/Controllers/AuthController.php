@@ -38,6 +38,10 @@ class AuthController extends BaseController
             return redirect()->to('/login')->with('error', 'Veuillez entrer un numéro de téléphone.');
         }
 
+        if (!preg_match('/^\d{10}$/', $telephone)) {
+            return redirect()->to('/login')->with('error', 'Le numéro de téléphone doit contenir exactement 10 chiffres.');
+        }
+
         $user = $this->userModel->findByTelephone($telephone);
 
         if (!$user) {
