@@ -87,6 +87,7 @@ $titre = 'Transfert — Mobile Money';
                 <label class="field-label">Beneficiaires (Telma 034 uniquement)</label>
                 <div class="beneficiaire-grid" id="transfert-container" data-clients="<?= htmlspecialchars(json_encode(array_column($clients, 'telephone')), ENT_QUOTES, 'UTF-8') ?>" data-frais-url="<?= site_url('client/frais/transfert') ?>" data-submit-url="<?= site_url('client/transfert-multiple') ?>" data-csrf-name="<?= csrf_token() ?>" data-csrf-hash="<?= csrf_hash() ?>">
                     <input type="hidden" id="beneficiaires-hidden" name="beneficiaires" value="">
+                    <button type="button" class="beneficiaire-add" id="add-transfert-btn" title="Ajouter un beneficiaire">+</button>
                 </div>
             </div>
 
@@ -96,14 +97,6 @@ $titre = 'Transfert — Mobile Money';
                     <span>Ajouter les frais de retrait</span>
                 </label>
             </div>
-
-            <button type="button" class="btn btn-secondary btn-block" id="add-transfert" style="margin-top: 1rem;">
-                <svg class="icon icon-sm" viewBox="0 0 24 24">
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                Ajouter un beneficiaire
-            </button>
 
             <button type="button" class="btn btn-accent btn-block" id="submit-all-transferts" style="margin-top: 1rem;">
                 Valider tous les transferts

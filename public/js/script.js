@@ -247,6 +247,9 @@
             if (data.commission_valeur && data.commission_valeur > 0) {
               feeText += " + " + data.commission_valeur + " Ar (commission)";
             }
+            if (data.promotion_pct && data.promotion_pct > 0) {
+              feeText += " <span style=\"color:var(--ok);font-size:.78rem;\">(-" + data.promotion_pct + "% promotion même opérateur)</span>";
+            }
             if (data.frais_option && data.frais_option > 0) {
               feeText += " + " + data.frais_option + " Ar (frais de retrait)";
               currentFraisOption = data.frais_option;
@@ -393,7 +396,7 @@
   }
 
   /* ---------------------------------------------------------------------
-     Transfert multiple : duplication de formulaire et envoi groupé
+     Transfert multiple : chips beneficiaires + envoi groupé
      --------------------------------------------------------------------- */
   function initMultiTransfert() {
     var container = document.getElementById("transfert-container");
@@ -411,7 +414,7 @@
       try { clients = JSON.parse(clientsData); } catch (e) { clients = []; }
     }
 
-    var transfertCount = 1;
+    var transfertCount = 0;
     var fraisUrl = container.getAttribute("data-frais-url") || "";
     var submitUrl = container.getAttribute("data-submit-url") || "";
     var csrfName = container.getAttribute("data-csrf-name") || "";
@@ -420,27 +423,92 @@
     var currentFraisOptionTotal = 0;
     var currentFraisRetraitTotal = 0;
 
-    var initialBeneficiaireInput = document.getElementById("beneficiaire_0");
-    if (initialBeneficiaireInput) {
-      console.log("[DEBUG] Validation 034 activée sur beneficiaire_0");
-    } else {
-      console.warn("[DEBUG] beneficiaire_0 introuvable dans le transfert multiple");
+    function getBeneficiaires() {
+      var chips = container.querySelectorAll(".beneficiaire-chip");
+      var list = [];
+      chips.forEach(function (chip) {
+        var span = chip.querySelector("span");
+        if (span && span.textContent) {
+          list.push(span.textContent.trim());
+        }
+      });
+      return list;
+    }
+
+    function setHiddenInput() {
+      var hidden = document.getElementById("beneficiaires-hidden");
+      if (hidden) {
+        hidden.value = getBeneficiaires().join(",");
+      }
+    }
+
+    function renderChips() {
+      var grid = document.getElementById("beneficiaire-grid");
+      if (!grid) return;
+      grid.innerHTML = "";
+
+      var chips = container.querySelectorAll(".beneficiaire-chip");
+      chips.forEach(function (chip) {
+        grid.appendChild(chip);
+      });
+
+      var addBtnChip = document.getElementById("add-transfert-btn");
+      if (addBtnChip) {
+        grid.appendChild(addBtnChip);
+      }
+
+      setHiddenInput();
+    }
+
+    function addChip(tel) {
+      tel = tel.trim();
+      if (!tel) return;
+
+      var grid = document.getElementById("beneficiaire-grid");
+      if (!grid) return;
+
+      var chip = document.createElement("div");
+      chip.className = "beneficiaire-chip";
+      chip.innerHTML =
+        '<span>' + escapeHtml(tel) + '</span>' +
+        '<button type="button" class="chip-remove" title="Supprimer">' +
+          '<svg class="icon icon-sm" viewBox="0 0 24 24">' +
+            '<line x1="18" y1="6" x2="6" y2="18" />' +
+            '<line x1="6" y1="6" x2="18" y2="18" />' +
+          '</svg>' +
+        '</button>';
+
+      grid.insertBefore(chip, document.getElementById("add-transfert-btn"));
+      setHiddenInput();
+      updateFraisTotal();
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
     }
 
     function updateMontantParts() {
-      var cards = container.querySelectorAll(".transfert-card");
       var montantTotal = parseFloat(montantTotalInput.value) || 0;
-      if (montantTotal <= 0) {
-        cards.forEach(function (card) {
-          var partInput = card.querySelector(".montant-part");
-          if (partInput) partInput.value = "0";
-        });
+      var beneficiaires = getBeneficiaires();
+      if (montantTotal <= 0 || beneficiaires.length === 0) {
         return;
       }
-      var part = montantTotal / cards.length;
-      cards.forEach(function (card) {
-        var partInput = card.querySelector(".montant-part");
-        if (partInput) partInput.value = Math.floor(part).toLocaleString("fr-FR");
+      var part = montantTotal / beneficiaires.length;
+      beneficiaires.forEach(function (tel) {
+        var input = document.getElementById("montant-part-" + tel.replace(/\s/g, "_"));
+        if (!input) {
+          input = document.createElement("input");
+          input.type = "hidden";
+          input.className = "montant-part";
+          input.id = "montant-part-" + tel.replace(/\s/g, "_");
+          container.appendChild(input);
+        }
+        input.value = Math.floor(part).toLocaleString("fr-FR");
       });
     }
 
@@ -453,16 +521,7 @@
         return;
       }
 
-      var premierBeneficiaire = "";
-      var cardsTmp = container.querySelectorAll(".transfert-card");
-      for (var i = 0; i < cardsTmp.length; i++) {
-        var idxTmp = cardsTmp[i].getAttribute("data-index");
-        var inputTmp = cardsTmp[i].querySelector("#beneficiaire_" + idxTmp);
-        if (inputTmp && inputTmp.value.trim()) {
-          premierBeneficiaire = inputTmp.value.trim();
-          break;
-        }
-      }
+      var premierBeneficiaire = getBeneficiaires()[0] || "";
 
       var body =
         "montant=" +
@@ -495,6 +554,9 @@
             var feeText = 'Frais : ' + data.frais + ' Ar';
             if (data.commission_valeur && data.commission_valeur > 0) {
               feeText += ' + ' + data.commission_valeur + ' Ar (commission)';
+            }
+            if (data.promotion_pct && data.promotion_pct > 0) {
+              feeText += ' <span style="color:var(--ok);font-size:.78rem;">(-' + data.promotion_pct + '% promotion même opérateur)</span>';
             }
             if (data.frais_option && data.frais_option > 0) {
               feeText += ' + ' + data.frais_option + ' Ar (frais de retrait)';
@@ -529,146 +591,48 @@
       });
     }
 
-    function buildCard(index) {
-      var card = document.createElement("div");
-      card.className = "card transfert-card";
-      card.setAttribute("data-index", index);
-      card.innerHTML =
-        '<div class="card-body">' +
-          '<button type="button" class="btn btn-danger btn-sm remove-transfert" style="float: right;" title="Supprimer ce transfert">' +
-            '<svg class="icon icon-sm" viewBox="0 0 24 24">' +
-              '<polyline points="3 6 5 6 21 6" />' +
-              '<path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />' +
-              '<path d="M10 11v6" />' +
-              '<path d="M14 11v6" />' +
-            '</svg>' +
-          '</button>' +
-          '<div class="field">' +
-            '<label for="beneficiaire_' + index + '" class="field-label">Beneficiaire (Numero Telma 034)</label>' +
-            '<input type="text" class="control beneficiaire-input" id="beneficiaire_' + index + '" placeholder="034 00 000 00" required>' +
-          '</div>' +
-          '<div class="field">' +
-            '<label class="field-label">Montant par beneficiaire</label>' +
-            '<div class="control-amount">' +
-              '<input type="text" class="control montant-part" id="montant-part_' + index + '" readonly>' +
-              '<span class="suffix">Ar</span>' +
-            '</div>' +
-          '</div>' +
-        '</div>';
-
-      var input = card.querySelector("#beneficiaire_" + index);
-      if (input) {
-        console.log("[DEBUG] Validation 034 activée sur beneficiaire_" + index);
-      }
-
-      return card;
-    }
-
-    function renderChips() {
-      var cards = container.querySelectorAll(".transfert-card");
-      var grid = document.getElementById("beneficiaire-grid");
-      if (!grid) return;
-      grid.innerHTML = "";
-
-      cards.forEach(function (card) {
-        var idx = card.getAttribute("data-index");
-        var input = card.querySelector("#beneficiaire_" + idx);
-        var tel = input ? input.value.trim() : "";
-        if (!tel) return;
-
-        var chip = document.createElement("div");
-        chip.className = "beneficiaire-chip";
-        chip.innerHTML =
-          '<span>' + escapeHtml(tel) + '</span>' +
-          '<button type="button" class="chip-remove" data-index="' + idx + '" title="Supprimer">' +
-            '<svg class="icon icon-sm" viewBox="0 0 24 24">' +
-              '<line x1="18" y1="6" x2="6" y2="18" />' +
-              '<line x1="6" y1="6" x2="18" y2="18" />' +
-            '</svg>' +
-          '</button>';
-        grid.appendChild(chip);
-      });
-
-      var addBtn = document.getElementById("add-transfert-btn");
-      if (addBtn) {
-        grid.appendChild(addBtn);
-      }
-    }
-
-    function escapeHtml(text) {
-      return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-
-    function updateRemoveButtons() {
-      var cards = container.querySelectorAll(".transfert-card");
-      var removeButtons = container.querySelectorAll(".remove-transfert");
-      if (cards.length <= 1) {
-        removeButtons.forEach(function (btn) { btn.setAttribute("disabled", "disabled"); });
-      } else {
-        removeButtons.forEach(function (btn) { btn.removeAttribute("disabled"); });
-      }
-    }
-
     montantTotalInput.addEventListener("input", function () {
       updateMontantParts();
       updateFraisTotal();
     });
 
     addBtn.addEventListener("click", function () {
-      var card = buildCard(transfertCount);
-      container.appendChild(card);
-      transfertCount++;
-      updateMontantParts();
-      updateRemoveButtons();
+      var tel = prompt("Numero de telephone Telma 034 :");
+      if (!tel) return;
+      tel = tel.trim();
+      if (!/^\d{10}$/.test(tel)) {
+        errorsDiv.innerHTML = '<div class="alert alert-danger"><span>Le numéro de téléphone doit contenir exactement 10 chiffres.</span></div>';
+        return;
+      }
+      var prefixe = tel.substring(0, 3);
+      if (prefixe !== "034") {
+        errorsDiv.innerHTML = '<div class="alert alert-danger"><span>Le transfert multiple est reserve aux operateurs Telma (034).</span></div>';
+        return;
+      }
+      if (getBeneficiaires().indexOf(tel) !== -1) {
+        errorsDiv.innerHTML = '<div class="alert alert-danger"><span>Ce numéro est déjà dans la liste.</span></div>';
+        return;
+      }
+      addChip(tel);
+      errorsDiv.innerHTML = "";
     });
 
     container.addEventListener("click", function (e) {
-      var btn = e.target.closest(".remove-transfert");
+      var btn = e.target.closest(".chip-remove");
       if (!btn) return;
-      if (btn.hasAttribute("disabled")) return;
-      var card = btn.closest(".transfert-card");
-      if (!card) return;
-      card.remove();
+      var chip = btn.closest(".beneficiaire-chip");
+      if (!chip) return;
+      chip.remove();
+      setHiddenInput();
       updateMontantParts();
-      updateRemoveButtons();
+      updateFraisTotal();
     });
 
-    updateRemoveButtons();
-    updateMontantParts();
-
     submitAllBtn.addEventListener("click", function () {
-      var cards = container.querySelectorAll(".transfert-card");
-      var promises = [];
-      var beneficiaires = [];
-      var hasError = false;
+      var beneficiaires = getBeneficiaires();
 
-      cards.forEach(function (card) {
-        var idx = card.getAttribute("data-index");
-        var beneficiaireInput = card.querySelector("#beneficiaire_" + idx);
-        var beneficiaire = beneficiaireInput ? beneficiaireInput.value.trim() : "";
-
-        if (!beneficiaire) {
-          errorsDiv.innerHTML = '<div class="alert alert-danger"><span>Transfert #' + (parseInt(idx) + 1) + ' : beneficiaire manquant.</span></div>';
-          hasError = true;
-          return;
-        }
-
-        var prefixe = beneficiaire.substring(0, 3);
-        if (prefixe !== "034") {
-          errorsDiv.innerHTML = '<div class="alert alert-danger"><span>Transfert #' + (parseInt(idx) + 1) + ' : seul l\'operateur Telma (034) est autorise pour le transfert multiple.</span></div>';
-          hasError = true;
-          return;
-        }
-
-        beneficiaires.push(beneficiaire);
-      });
-
-      if (hasError || beneficiaires.length === 0) {
+      if (beneficiaires.length === 0) {
+        errorsDiv.innerHTML = '<div class="alert alert-danger"><span>Veuillez ajouter au moins un bénéficiaire.</span></div>';
         return;
       }
 
@@ -677,6 +641,8 @@
         errorsDiv.innerHTML = '<div class="alert alert-danger"><span>Veuillez entrer un montant total et attendre le calcul des frais.</span></div>';
         return;
       }
+
+      errorsDiv.innerHTML = "";
 
       var body =
         "beneficiaires[]=" + beneficiaires.map(encodeURIComponent).join("&beneficiaires[]=") +
@@ -704,10 +670,8 @@
         .then(function (data) {
           if (data.success) {
             window.alert(data.count + " transfert(s) effectué(s) avec succès ! Nouveau solde : " + data.nouveau_solde + " Ar");
-            container.innerHTML = "";
-            transfertCount = 1;
-            container.appendChild(buildCard(0));
-            transfertCount = 1;
+            container.querySelectorAll(".beneficiaire-chip").forEach(function (chip) { chip.remove(); });
+            setHiddenInput();
             montantTotalInput.value = "";
             fraisTotalDisplay.innerHTML = '<svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><line x1="12" y1="8" x2="12" y2="13" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg> Frais : —';
             fraisTotalDisplay.classList.remove("is-error");
@@ -727,5 +691,7 @@
           submitAllBtn.removeAttribute("disabled");
         });
     });
+
+    renderChips();
   }
 })();

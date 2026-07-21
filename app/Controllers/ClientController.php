@@ -242,6 +242,22 @@ class ClientController extends BaseController
             $frais = $tranche->frais;
             $commission_pct = 0;
 
+            $promotionPct = 0;
+            if ($emetteur->id_prefixe == $beneficiaireClient->id_prefixe) {
+                $promotionModel = new \App\Models\PromotionFraisModel();
+                $promotion = $promotionModel->where('id_prefixe_source', $emetteur->id_prefixe)
+                    ->where('id_prefixe_dest', $beneficiaireClient->id_prefixe)
+                    ->where('id_type_operation', $type->id)
+                    ->first();
+                if ($promotion) {
+                    $promotionPct = (float) $promotion->reduction_pct;
+                }
+            }
+
+            if ($promotionPct > 0) {
+                $frais = $frais * (1 - $promotionPct / 100);
+            }
+
             $fraisRetrait = 0;
 
             if ($ajouterFraisRetrait) {
@@ -267,7 +283,8 @@ class ClientController extends BaseController
             'commission_pct' => $commission_pct,
             'commission_valeur' => $commission_valeur,
             'frais_option' => isset($fraisOption) ? $fraisOption : 0,
-            'frais_retrait' => $fraisRetrait
+            'frais_retrait' => $fraisRetrait,
+            'promotion_pct' => $promotionPct
         ]);
     }
 
@@ -473,6 +490,22 @@ class ClientController extends BaseController
             ->first();
 
         $fraisTransfert = $tranche ? (float) $tranche->frais : 0;
+
+        $promotionPct = 0;
+        if ($emetteur->id_prefixe == $beneficiaireClient->id_prefixe) {
+            $promotionModel = new \App\Models\PromotionFraisModel();
+            $promotion = $promotionModel->where('id_prefixe_source', $emetteur->id_prefixe)
+                ->where('id_prefixe_dest', $beneficiaireClient->id_prefixe)
+                ->where('id_type_operation', $type->id)
+                ->first();
+            if ($promotion) {
+                $promotionPct = (float) $promotion->reduction_pct;
+            }
+        }
+
+        if ($promotionPct > 0) {
+            $fraisTransfert = $fraisTransfert * (1 - $promotionPct / 100);
+        }
 
         $totalDebit = (float) $montant + $fraisTransfert + $commission + (float) ($fraisOptionApp ?? 0);
 
