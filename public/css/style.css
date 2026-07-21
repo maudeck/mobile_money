@@ -328,12 +328,6 @@ table.table th.number{text-align:right;}
 
 .list-card{background:var(--paper);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-sm);}
 
-.info-list{display:flex;flex-direction:column;gap:0;}
-.info-item{display:flex;align-items:center;justify-content:space-between;gap:.8rem;padding:.9rem 0;border-bottom:1px solid var(--border);}
-.info-item:last-child{border-bottom:none;}
-.info-label{font-size:.85rem;font-weight:600;color:var(--text-muted);display:flex;align-items:center;gap:.4rem;}
-.info-value{font-size:.9rem;font-weight:700;color:var(--navy);text-align:right;word-break:break-word;}
-
 .bottom-nav{
   position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:560px;
   height:var(--bottom-nav-h);background:var(--paper);border-top:1px solid var(--border);
